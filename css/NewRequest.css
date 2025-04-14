@@ -1,0 +1,182 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+  background-color: #f5f5f5;
+}
+
+/* Header */
+.top-header {
+  background: linear-gradient(to right, #01092b, #47005a);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+}
+
+.top-header .title {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.user-area {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.username {
+  color: #00c8ff;
+  font-weight: 500;
+}
+
+.role {
+  font-size: 14px;
+  color: #fff;
+}
+
+.logout-btn {
+  background-color: #dcd2f5;
+  color: #1a1054;
+  border: none;
+  padding: 6px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* Navigation */
+.navbar {
+  background-color: #4b4574;
+  padding: 10px 30px;
+  display: flex;
+  gap: 20px;
+}
+
+.navbar a {
+  color: white !important;
+  text-decoration: none; /* Ensure no underline by default */
+}
+
+.navbar a:hover {
+  color: #f0c240; /* gold/yellow on hover */
+}
+
+.navbar a.active {
+  text-decoration: underline; /* Underline when active */
+  color: #f0c240; /* Gold/yellow for the active link */
+}
+
+.nav-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 8px 15px;
+  border-radius: 5px;
+  font-weight: 500;
+}
+
+.nav-btn.active {
+  background-color: #f0c240;
+  color: #000;
+}
+
+/* Main content */
+.form-wrapper {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  max-width: 700px;
+  margin: 30px auto;
+  box-shadow: 0 0 10px rgba(0,0,0,0.08);
+}
+
+.request-form label {
+  display: block;
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+.request-form label span {
+  color: red;
+}
+
+.request-form input[type="text"],
+.request-form input[type="date"],
+.request-form textarea,
+.request-form input[type="file"] {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.request-form textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.checkbox-group {
+  margin-top: 15px;
+}
+
+.checkbox-group label {
+  display: inline;
+  margin-left: 8px;
+  font-weight: normal;
+}
+
+small {
+  display: block;
+  margin-top: 5px;
+  color: #555;
+  font-size: 13px;
+}
+
+.button-group {
+  margin-top: 25px;
+}
+
+.draft-btn,
+.submit-btn {
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.draft-btn {
+  background-color: #f2c94c;
+  color: #000;
+  margin-right: 10px;
+}
+
+.submit-btn {
+  background-color: #2d2a7a;
+  color: #fff;
+}
+
+/* Background Logo */
+.background-logo-wrapper {
+  position: fixed;
+  bottom: 30px;
+  left: 5px;
+  width: 260px;
+  height: 300px;
+  background-image: url('../images/SBLC logo.png.png');
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: left bottom;
+  opacity: 0.70;
+  z-index: 0;
+  pointer-events: none;
+}

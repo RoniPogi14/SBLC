@@ -1,0 +1,674 @@
+/* General Styling with Updated Colors */
+* {
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    background-color: #26225C;
+    color: white;
+    padding: 15px 0;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-role {
+    background-color: rgba(38, 34, 92, 0.7);
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 14px;
+}
+
+.required {
+    color: #e74c3c;
+}
+
+.urgent {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+.urgent-deadline {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+button {
+    cursor: pointer;
+    padding: 8px 15px;
+    background-color: #F9C941;
+    color: #26225C;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: background-color 0.2s;
+    font-weight: 600;
+}
+
+button:hover {
+    background-color: #eab62d;
+}
+
+button.secondary {
+    background-color: #dedaff;
+    color: #26225C;
+}
+
+button.secondary:hover {
+    background-color: #cecae8;
+}
+
+button.danger {
+    background-color: #e74c3c;
+    color: white;
+}
+
+button.danger:hover {
+    background-color: #c0392b;
+}
+
+button.success {
+    background-color: #26225C;
+    color: #F9C941;
+}
+
+button.success:hover {
+    background-color: #1e1a4d;
+}
+
+button.warning {
+    background-color: #f39c12;
+    color: white;
+}
+
+button.warning:hover {
+    background-color: #d8870a;
+}
+
+/* Navigation */
+nav {
+    background-color: rgba(38, 34, 92, 0.8);
+    padding: 10px 0;
+}
+
+.nav-links {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+
+.nav-links a:hover, .nav-links a.active {
+    background-color: #F9C941;
+    color: #26225C;
+}
+
+/* Main Content */
+main {
+    padding: 20px 0;
+    min-height: calc(100vh - 180px);
+}
+
+.card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(38, 34, 92, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+h2, h3 {
+    margin: 0;
+    color: #26225C;
+}
+
+/* Table Styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+th {
+    background-color: rgba(249, 201, 65, 0.2);
+    font-weight: 600;
+    color: #26225C;
+}
+
+tr:hover {
+    background-color: rgba(249, 201, 65, 0.1);
+}
+
+.status {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status.draft {
+    background-color: #dedaff;
+    color: #26225C;
+}
+
+.status.pending {
+    background-color: #F9C941;
+    color: #26225C;
+}
+
+.status.in-review {
+    background-color: #3498db;
+    color: white;
+}
+
+.status.waiting {
+    background-color: #9b59b6;
+    color: white;
+}
+
+.status.on-hold {
+    background-color: #f39c12;
+    color: white;
+}
+
+.status.approved {
+    background-color: #26225C;
+    color: #F9C941;
+}
+
+.status.rejected {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.status.completed {
+    background-color: #2ecc71;
+    color: white;
+}
+
+.actions {
+    display: flex;
+    gap: 5px;
+}
+
+/* Forms */
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #26225C;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.department-approval {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.approval-card {
+    border: 1px solid #ecf0f1;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.approval-card.signed {
+    border-color: #26225C;
+    background-color: rgba(38, 34, 92, 0.1);
+}
+
+.sign-info {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #26225C;
+}
+
+.signature {
+    margin: 10px 0;
+    padding: 5px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+.signature-image {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ecf0f1;
+    padding-bottom: 10px;
+    overflow-x: auto;
+}
+
+.tab {
+    padding: 8px 15px;
+    cursor: pointer;
+    border-radius: 4px 4px 0 0;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+
+.tab.active {
+    background-color: #26225C;
+    color: #F9C941;
+}
+
+.tab:hover:not(.active) {
+    background-color: rgba(249, 201, 65, 0.2);
+}
+
+/* Modal */
+.modal-bg {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(38, 34, 92, 0.5);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(38, 34, 92, 0.3);
+    width: 500px;
+    max-width: 90%;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #ecf0f1;
+    background-color: rgba(249, 201, 65, 0.2);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #ecf0f1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.close-modal {
+    cursor: pointer;
+    font-size: 20px;
+    color: #26225C;
+}
+
+/* File Upload */
+.dropzone {
+    border: 2px dashed #F9C941;
+    border-radius: 8px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    margin-bottom: 20px;
+    background-color: rgba(249, 201, 65, 0.1);
+}
+
+.dropzone:hover {
+    border-color: #26225C;
+    background-color: rgba(249, 201, 65, 0.2);
+}
+
+.file-list {
+    list-style: none;
+    padding: 0;
+}
+
+.file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #ecf0f1;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
+
+.file-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Comments Section */
+.comments-section {
+    margin: 20px 0;
+}
+
+.comment {
+    background-color: #f8f9fa;
+    border-left: 4px solid #26225C;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    border-radius: 0 4px 4px 0;
+}
+
+.comment.info-request {
+    border-left-color: #f39c12;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-size: 12px;
+    color: #7f8c8d;
+}
+
+.comment-body {
+    font-size: 14px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header-content, .nav-links {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .department-approval {
+        grid-template-columns: 1fr;
+    }
+    
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    th, td {
+        padding: 8px;
+    }
+    
+    .actions {
+        flex-direction: column;
+    }
+    
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
+
+/* File Upload Styling */
+input[type="file"] {
+    padding: 10px;
+    border: 2px solid #F9C941;
+    border-radius: 4px;
+    background-color: rgba(249, 201, 65, 0.1);
+    width: 100%;
+    cursor: pointer;
+}
+
+input[type="file"]:hover {
+    background-color: rgba(249, 201, 65, 0.2);
+    border-color: #26225C;
+}
+
+.file-item {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ecf0f1;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.file-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.required {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+/* Status colors for completed status */
+.status.completed {
+    background-color: #2ecc71;
+    color: white;
+}
+
+/* Make buttons more prominent */
+button.success {
+    background-color: #26225C;
+    color: #F9C941;
+    font-weight: bold;
+    padding: 10px 15px;
+}
+
+button.success:hover {
+    background-color: #1e1a4d;
+}
+
+button.secondary {
+    background-color: #dedaff;
+    color: #26225C;
+    font-weight: bold;
+    padding: 10px 15px;
+}
+
+button.secondary:hover {
+    background-color: #cecae8;
+}
+
+/* Document Viewer Styles */
+.document-viewer {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.document-info {
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    padding: 15px;
+}
+
+.info-item {
+    margin-bottom: 8px;
+}
+
+.document-content {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.document-preview {
+    min-height: 300px;
+    max-height: 500px;
+    overflow-y: auto;
+    background-color: white;
+}
+
+.preview-header {
+    padding: 10px;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #ddd;
+}
+
+.file-name.clickable {
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.file-name.clickable:hover {
+    color: #26225C;
+    text-decoration: underline;
+}
+
+/* Modal adjustments for document viewer */
+.modal {
+    width: 800px;
+    max-width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* Simplified signature pad styles focused on cursor alignment */
+.signature-pad-container {
+    margin-top: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    height: 200px;
+}
+
+.signature-pad-container canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    cursor: crosshair !important;
+    border: none;
+    background-color: white;
+    touch-action: none;
+}
+
+.signature-pad-controls {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+    gap: 10px;
+}
+
+/* Signature display styles */
+.signature-image {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #dedaff;
+    border-radius: 4px;
+    padding: 5px;
+    background-color: white;
+}
+
+.signature {
+    margin-top: 15px;
+    padding: 5px;
+    background-color: rgba(249, 201, 65, 0.1);
+    border-radius: 4px;
+}
+
+/* Add a helper hint that fades away when user starts signing */
+.signature-pad-container.empty::before {
+    content: "Click and drag to sign here";
+}
+
+/* Improve styling of signature clear button */
+#clear-signature {
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+/* Make signature image display better */
+.signature-image {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #dedaff;
+    border-radius: 4px;
+    padding: 5px;
+    background-color: white;
+}
+
+.signature {
+    margin-top: 15px;
+    padding: 5px;
+    background-color: rgba(249, 201, 65, 0.1);
+    border-radius: 4px;
+}

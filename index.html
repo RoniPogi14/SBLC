@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Request System</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Add SignaturePad library -->
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">Document Request System</div>
+                <div class="user-info">
+                    <span id="user-name">Guest</span>
+                    <span class="user-role" id="user-role">Not logged in</span>
+                    <button id="logout-btn" class="secondary">Logout</button>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <div class="nav-links" id="nav-links">
+                <!-- Navigation links will be added dynamically based on user role -->
+            </div>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container" id="main-content">
+            <!-- Main content will be loaded here based on navigation and user role -->
+        </div>
+    </main>
+    
+    <!-- Modal for various actions -->
+    <div class="modal-bg" id="modal-container">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modal-title">Modal Title</h3>
+                <span class="close-modal" id="close-modal">&times;</span>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Modal content will be loaded here -->
+            </div>
+            <div class="modal-footer" id="modal-footer">
+                <!-- Modal buttons will be added here -->
+            </div>
+        </div>
+    </div>
+    
+    <script src="database.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

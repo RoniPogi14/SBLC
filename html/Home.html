@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Document Request System</title>
+  <link rel="stylesheet" href="../css/Home.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="logo-section">
+      <img src="..//images/SBLC Logo.jpg" alt="SBLC Logo" class="logo" />
+      <h1>DOCUMENT REQUEST SYSTEM</h1>
+    </div>
+    <div class="user-info">
+      <span>Guest</span>
+      <span>Not Logged in</span>
+      <button class="logout-btn">Log out</button>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <div class="centered-container">
+      <section class="login-section">
+        <h2>Log-in to Document Request System</h2>
+        <div class="line"></div>
+        <form>
+          <label>Username</label>
+          <input type="text" placeholder="Enter username" />
+          <label>Password</label>
+          <input type="password" placeholder="Enter password" />
+          <a href="DashboardRequestor.html" class="login-btn">Login</a>
+        </form>
+      </section>
+
+      <section class="accounts-section">
+        <h3>Accounts</h3>
+        <div class="accounts-buttons">
+          <button>Requestor</button>
+          <button>Finance</button>
+          <button>HR</button>
+          <button>IT</button>
+          <button>Operations</button>
+          <button>Administrator</button>
+        </div>
+      </section>
+
+    <section class="table-section">
+      <br><br><h3>Recent Requests</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Request ID</th>
+            <th>Document Type</th>
+            <th>Date Requested</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>REQ001</td>
+            <td>Transcript</td>
+            <td>2025-04-10</td>
+            <td>Pending</td>
+          </tr>
+          <tr>
+            <td>REQ002</td>
+            <td>Certificate</td>
+            <td>2025-04-11</td>
+            <td>Approved</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <div class="overlay"></div>
+    
+  </main>
+</body>
+</html>

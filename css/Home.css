@@ -1,0 +1,217 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Arial', sans-serif;
+}
+
+body {
+  background-color: #4b1f61;
+  background-image: url('../images/SBLC\ logo.png.png'); /* Update the path as needed */
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 400px auto; /* Adjust size to fit your design */
+  background-attachment: fixed;
+  opacity: 1;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(to right, #01092b, #47005a);
+  color: white;
+  padding: 10px 20px;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.logo {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+
+.header h1 {
+  font-size: 22px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-info span {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 3px;
+}
+
+.logout-btn {
+  background-color: #a55af5;
+  border: none;
+  padding: 6px 15px;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* Main container */
+.main-container {
+  padding: 20px;
+}
+
+/* Centering wrapper */
+.centered-container {
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Login Section */
+.login-section {
+  background-color: white;
+  border: 2px solid #020005;
+  padding: 20px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.login-section h2 {
+  margin-bottom: 10px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.line {
+  height: 5px;
+  background-color: black;
+  margin-bottom: 15px;
+  box-shadow: 0px 3px 3px #888888;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+form label {
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+form input {
+  padding: 8px;
+  margin-bottom: 15px;
+  border: 1px solid #444;
+  border-radius: 5px;
+}
+
+.login-btn {
+  display: inline-block;
+  background-color: #53035c;
+  color: #f9f6f6;
+  text-align: center;
+  text-decoration: none;
+  padding: 10px 20px;
+  border-radius: 2px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100px;
+}
+
+/* Accounts Section */
+.accounts-section {
+  background-color: white;
+  border: 2px solid #020006;
+  padding: 20px;
+}
+
+.accounts-section h3 {
+  font-size: 16px;
+  margin-bottom: 15px;
+}
+
+.accounts-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-left: 120px;
+}
+
+.accounts-buttons button {
+  background-color: #191970;
+  color: white;
+  font-weight: bold;
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  width: 160px;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* Table Styling */
+table {
+  width: 90%;
+  max-width: 800px;
+  margin: 20px auto;
+  border-collapse: collapse;
+  font-size: 14px;
+  background-color: white;
+  border: 2px solid #000;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+th, td {
+  padding: 6px 10px;
+  border: 1px solid #444;
+  text-align: left;
+}
+
+th {
+  background-color: #590663;
+  color: white;
+  font-weight: bold;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* SBLC Logo in Background */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(234, 226, 239, 0.8); /* matches your purple + 80% opacity */
+  z-index: -1;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-image: url('../images/SBLC Logo.jpg'); /* Replace with correct path */
+  background-size: 500px auto; /* Make it large and clear */
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.1; /* Adjust to make it more or less visible */
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none; /* Keeps background from interfering with clicks */
+}
