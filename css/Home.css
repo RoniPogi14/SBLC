@@ -7,7 +7,7 @@
 
 body {
   background-color: #4b1f61;
-  background-image: url('../images/SBLC\ logo.png.png'); /* Update the path as needed */
+  background-image: url('../images/SBLC\ logo.png'); /* Update the path as needed */
   background-repeat: no-repeat;
   background-position: center;
   background-size: 400px auto; /* Adjust size to fit your design */
@@ -202,16 +202,16 @@ tr:nth-child(even) {
 body::before {
   content: "";
   position: fixed;
-  top: 50%;
+  top: 60%; /* 👈 Pushes it lower on the screen */
   left: 50%;
   transform: translate(-50%, -50%);
-  background-image: url('../images/SBLC Logo.jpg'); /* Replace with correct path */
-  background-size: 500px auto; /* Make it large and clear */
+  background-image: url('../images/SBLC Logo.jpg');
+  background-size: 500px auto;
   background-repeat: no-repeat;
   background-position: center;
-  opacity: 0.1; /* Adjust to make it more or less visible */
+  opacity: 0.1;
   width: 100%;
   height: 100%;
   z-index: 0;
-  pointer-events: none; /* Keeps background from interfering with clicks */
+  pointer-events: none;
 }
