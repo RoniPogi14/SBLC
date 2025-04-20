@@ -1,0 +1,286 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+}
+
+/* Header */
+.top-header {
+    background: linear-gradient(to right, #01092b, #47005a);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+}
+
+.top-header .title {
+    font-size: 22px;
+    font-weight: bold;
+    color: white;
+}
+
+.user-area {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-area img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.username {
+    color: #00c8ff;
+    font-weight: 500;
+}
+
+.role {
+    font-size: 14px;
+    color: #fff;
+}
+
+.logout-btn {
+    background-color: #dcd2f5;
+    color: #1a1054;
+    border: none;
+    padding: 6px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+}
+
+/* Navigation */
+.navbar {
+    background-color: #4b4574;
+    padding: 10px 30px;
+    display: flex;
+    gap: 20px;
+}
+
+.navbar a {
+    color: white !important;
+}
+
+.navbar a:hover {
+    text-decoration: underline;
+    color: #f0c240;
+}
+
+.nav-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color 0.3s, color 0.3s;
+    display: inline-block;
+}
+
+.nav-btn.active {
+    background-color: #f0c240;
+    color: #1a1054;
+}
+
+/* More specific selector for the finance dashboard table */
+.Finance table.finance-dashboard {
+    width: 60% !important; /* Enforce smaller table width */
+    min-width: 500px !important; /* Prevent it from shrinking too much */
+    margin: 40px auto 20px auto; /* Center the table and add space above and below */
+    font-size: 12px !important; /* Enforce smaller font size */
+    border-collapse: collapse !important; /* Ensures the borders collapse */
+}
+
+.Finance table.finance-dashboard thead {
+    background-color: #fff7e6 !important; /* Make header color consistent */
+}
+
+.Finance table.finance-dashboard thead th {
+    padding: 8px !important; /* Smaller padding for header cells */
+    text-align: left;
+    color: #1a1054 !important; /* Header text color */
+    min-width: 120px !important; /* Ensure the headers are not too wide */
+}
+
+.Finance table.finance-dashboard tbody tr {
+    border-bottom: 1px solid #eee;
+    background-color: #fffdf5;
+}
+
+.Finance table.finance-dashboard tbody td {
+    padding: 8px !important; /* Smaller padding for table data */
+    font-size: 12px !important; /* Adjust font size for better compactness */
+    min-width: 120px !important; /* Avoid overly narrow cells */
+}
+
+.Finance table.finance-dashboard .status {
+    font-weight: 500;
+    color: #4b0082;
+    text-transform: capitalize;
+}
+
+.Finance table.finance-dashboard .deadline {
+    color: #e53935;
+    font-weight: bold;
+}
+
+/* Dashboard Container */
+.Finance {
+    padding: 30px;
+    max-width: 1200px;
+    margin: auto;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Section Titles */
+.Finance h1,
+.Finance h2 {
+    color: #1a1054;
+    margin-bottom: 15px;
+}
+
+hr {
+    margin-bottom: 25px;
+}
+
+/* Overview Cards */
+.overview {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.card {
+    flex: 1;
+    padding: 20px;
+    border-radius: 12px;
+    color: white;
+    text-align: center;
+    font-weight: bold;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card.pending {
+    background-color: #f9a825;
+}
+
+.card.completed {
+    background-color: #2ecc71;
+}
+
+.card .count {
+    font-size: 36px;
+    margin-bottom: 5px;
+}
+
+/* ✅ Table Styling - Compact and Clean */
+table {
+    width: 95%;
+    border-collapse: collapse;
+    margin: 0 auto 20px auto;
+    font-size: 14px;
+}
+
+thead {
+    background-color: #fff7e6;
+}
+
+thead th {
+    padding: 10px;
+    text-align: left;
+    color: #1a1054;
+}
+
+tbody tr {
+    border-bottom: 1px solid #eee;
+    background-color: #fffdf5;
+}
+
+tbody td {
+    padding: 10px;
+    font-size: 14px;
+}
+
+/* Urgent Text */
+.urgent {
+    color: #d32f2f;
+    font-weight: bold;
+}
+
+/* Status Styling */
+.status {
+    font-weight: 500;
+    color: #4b0082;
+    text-transform: capitalize;
+}
+
+/* Deadline */
+.deadline {
+    color: #e53935;
+    font-weight: bold;
+}
+
+/* View Button */
+.view-btn {
+    background-color: #f0c240;
+    color: #1a1054;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+.view-btn:hover {
+    background-color: #ffd369;
+}
+
+/* View Pending Approvals Button */
+.pending-btn {
+    margin-top: 15px;
+    background-color: #f0c240;
+    color: #1a1054;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.pending-btn:hover {
+    background-color: #ffd369;
+}
+
+/* Background Logo - Absolute position at bottom-left */
+.background-logo-wrapper {
+    position: fixed;
+    bottom: 30px;
+    left: 5px;
+    width: 260px;
+    height: 300px;
+    background-image: url('../images/SBLC logo.png');
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: left bottom;
+    opacity: 0.70;
+    z-index: 0;
+    pointer-events: none;
+}

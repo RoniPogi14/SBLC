@@ -7,12 +7,39 @@
 
 body {
   background-color: #4b1f61;
-  background-image: url('../images/SBLC\ logo.png'); /* Update the path as needed */
+  background-image: url('../images/SBLC\\ logo.png');
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 400px auto; /* Adjust size to fit your design */
+  background-size: 400px auto;
   background-attachment: fixed;
-  opacity: 1;
+}
+
+/* Overlay Logo */
+body::before {
+  content: "";
+  position: fixed;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-image: url('../images/SBLC Logo.jpg');
+  background-size: 500px auto;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.1;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(234, 226, 239, 0.8);
+  z-index: -1;
 }
 
 /* Header */
@@ -50,27 +77,45 @@ body {
 }
 
 .user-info span {
-  display: block;
   font-size: 14px;
-  margin-bottom: 3px;
 }
 
+.logout-btn,
+.login-btn,
+.cta-btn,
+.department-btn {
+    background-color: #53035c;
+    color: #f9f6f6;
+    border: none;
+    padding: 6px 12px;         /* smaller padding */
+    font-size: 13px;           /* smaller font */
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    width: fit-content;        /* only as wide as its content */
+  }
+  
 .logout-btn {
-  background-color: #a55af5;
-  border: none;
   padding: 6px 15px;
-  color: white;
   border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
 }
 
-/* Main container */
+.logout-btn:hover,
+.login-btn:hover,
+.cta-btn:hover,
+.department-btn:hover {
+  background-color: #7418a8;
+  transform: scale(1.05);
+}
+
+/* Containers */
 .main-container {
   padding: 20px;
 }
 
-/* Centering wrapper */
 .centered-container {
   max-width: 900px;
   margin: 0 auto;
@@ -116,55 +161,104 @@ form input {
   border-radius: 5px;
 }
 
-.login-btn {
-  display: inline-block;
-  background-color: #53035c;
-  color: #f9f6f6;
-  text-align: center;
-  text-decoration: none;
-  padding: 10px 20px;
-  border-radius: 2px;
-  font-weight: bold;
-  cursor: pointer;
-  width: 100px;
+form input:focus {
+  outline: none;
+  border: 2px solid #6c1b9a;
+  background-color: #f3f0f8;
 }
 
-/* Accounts Section */
-.accounts-section {
-  background-color: white;
-  border: 2px solid #020006;
-  padding: 20px;
-}
-
-.accounts-section h3 {
-  font-size: 16px;
-  margin-bottom: 15px;
-}
-
-.accounts-buttons {
+/* Login buttons group */
+.login-buttons {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-left: 120px;
+  margin-top: 15px;
+  align-items: flex-start;
 }
 
-.accounts-buttons button {
-  background-color: #191970;
-  color: white;
-  font-weight: bold;
-  padding: 8px;
-  border: none;
-  border-radius: 6px;
-  width: 160px;
+.login-buttons .login-btn {
+  width: 250px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.login-buttons .login-btn:hover {
+  transform: scale(1.03);
+}
+
+/* Intro Section */
+.intro-section {
+  background-color: #fff;
+  border: 2px solid #2e0a3f;
+  padding: 20px;
+  margin: 20px auto;
+  max-width: 900px;
+  font-size: 14px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.intro-section h2 {
+  font-size: 20px;
+  color: #47005a;
+  margin-bottom: 10px;
+}
+
+.intro-section p {
+  color: #333;
+  line-height: 1.6;
+}
+
+/* Get Started Button */
+.cta-btn {
+  margin-top: 50px;
+}
+
+/* Academics Department */
+.academics-department {
+  background-color: white;
+  border: 2px solid #020006;
+  padding: 20px;
+  margin-top: 20px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
   text-align: center;
-  cursor: pointer;
+  height: 100%; /* Make sure the parent container takes up full height */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* This will center the department list vertically */
+  align-items: center; /* This will center it horizontally */
 }
 
-/* Table Styling */
+.department-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+  text-align: center; /* Centers text inside the items */
+  align-items: center; /* Centers items horizontally */
+  justify-content: center; /* Centers items vertically */
+}
+
+.department-list .department-btn {
+  text-align: center;
+  width: 100%; /* or use `max-width` if you want to control width */
+}
+
+/* Table */
+.table-section h3 {
+  text-align: center;
+  font-size: 18px;
+  color: white;
+  margin-bottom: 10px;
+}
+
 table {
   width: 90%;
   max-width: 800px;
-  margin: 20px auto;
+  margin: 0 auto;
   border-collapse: collapse;
   font-size: 14px;
   background-color: white;
@@ -188,30 +282,51 @@ tr:nth-child(even) {
   background-color: #f9f9f9;
 }
 
-/* SBLC Logo in Background */
-.overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(234, 226, 239, 0.8); /* matches your purple + 80% opacity */
-  z-index: -1;
+/* Footer */
+.footer {
+  background-color: #2e003e;
+  color: white;
+  text-align: center;
+  padding: 15px;
+  margin-top: 40px;
+  font-size: 13px;
+  border-top: 2px solid #590663;
 }
 
-body::before {
-  content: "";
-  position: fixed;
-  top: 60%; /* 👈 Pushes it lower on the screen */
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-image: url('../images/SBLC Logo.jpg');
-  background-size: 500px auto;
-  background-repeat: no-repeat;
-  background-position: center;
-  opacity: 0.1;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
+.footer a {
+  color: #a55af5;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
+.footer p {
+  margin: 5px 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .logo-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  table {
+    width: 100%;
+    font-size: 12px;
+  }
+
+  .login-buttons a {
+    width: 100%;
+    max-width: 200px;
+  }
 }

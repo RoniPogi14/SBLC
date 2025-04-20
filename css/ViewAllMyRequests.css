@@ -274,19 +274,25 @@ a:focus, a:active {
   margin-right: auto;
 }
 
+/* Background Logo - Absolute position at bottom-left */
 .background-logo-wrapper {
   position: fixed;
   bottom: 30px;               /* ✅ lower-left corner */
   left: 5px;
   width: 260px;               /* ✅ smaller */
   height: 300px;
-  background-image: url('../images/SBLC logo.png.png');
+  background-image: url('../images/SBLC logo.png');
   background-repeat: no-repeat;
   background-size: contain;   /* ✅ keeps it proportional */
   background-position: left bottom;
   opacity: 0.70;              /* ✅ slightly more visible */
   z-index: 0;                 /* ✅ behind everything */
   pointer-events: none;
+}
+
+/* Remove background logo at the center */
+body::before {
+  content: none; /* This will remove the logo completely from the center */
 }
 
 .request-container {
@@ -398,3 +404,11 @@ a:focus, a:active {
     font-weight: bold;
   }
   
+  /* User Image*/
+.user-area img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%; /* Makes it a circle */
+  object-fit: cover;  /* Ensures the image fills the circle nicely */
+  border: 2px solid #f0c240; /* Optional: adds a gold border around the image */
+}

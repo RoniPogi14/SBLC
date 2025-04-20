@@ -1,3 +1,4 @@
+<!-- Home.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,6 +8,7 @@
   <link rel="stylesheet" href="../css/Home.css" />
 </head>
 <body>
+
   <header class="header">
     <div class="logo-section">
       <img src="..//images/SBLC Logo.jpg" alt="SBLC Logo" class="logo" />
@@ -19,32 +21,67 @@
     </div>
   </header>
 
+  <!-- Log-in to EDMS -->
   <main class="main-container">
     <div class="centered-container">
       <section class="login-section">
         <h2>Log-in to Document Request System</h2>
         <div class="line"></div>
         <form>
-          <label>Username</label>
-          <input type="text" placeholder="Enter username" />
-          <label>Password</label>
-          <input type="password" placeholder="Enter password" />
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" placeholder="Enter username" required />
+        
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Enter password" required />
+        
           <a href="DashboardRequestor.html" class="login-btn">Login</a>
         </form>
       </section>
 
-      <section class="accounts-section">
-        <h3>Accounts</h3>
-        <div class="accounts-buttons">
-          <button>Requestor</button>
-          <button>Finance</button>
-          <button>HR</button>
-          <button>IT</button>
-          <button>Operations</button>
-          <button>Administrator</button>
+  <main class="main-container">
+    <div class="centered-container">
+      <section class="login-section">
+        <h2>Select a Demo Account</h2>
+        <div class="line"></div>
+
+        <div class="login-buttons">
+          <a href="DashboardRequestor.html" class="login-btn">Requestor (john)</a>
+          <a href="DashboardFinance.html" class="login-btn">Finance Approver (jane)</a>
+          <a href="DashboardHR.html" class="login-btn">HR Approver (mike)</a>
+          <a href="DashboardIT.html" class="login-btn">IT Approver (sarah)</a>
+          <a href="DashboardOperations.html" class="login-btn">Operations Approver (david)</a>
+          <a href="DashboardAdmin.html" class="login-btn">Administrator (admin)</a>
         </div>
       </section>
 
+    <!-- Welcome to SBLC -->
+      <section class="intro-section">
+        <h2>Welcome to the SBLC Document Request System</h2>
+        <p>
+          This secure web-based platform is designed exclusively for SBLC employees to manage, track, and process internal document requests efficiently. 
+          Whether you're in HR, Finance, IT, Operations, or Administrative roles, this system provides centralized access to important forms and request records.
+          Please log in using your assigned credentials to begin.
+        </p>
+        <br><a href="GetStarted.html" class="cta-btn">Get Started</a>
+      </section>
+
+  <!-- Academics Department Section (visible without JS) -->
+  <div class="academics-department">
+    <h2>Academics Department</h2>
+    <p>Select a department to manage:</p>
+
+    <!-- List of Departments -->
+    <div class="department-list">
+      <button class="department-btn" data-department="nursing">Nursing</button>
+      <button class="department-btn" data-department="psychology">Psychology</button>
+      <button class="department-btn" data-department="education">Education</button>
+      <button class="department-btn" data-department="hospitality-management">Hospitality Management</button>
+      <button class="department-btn" data-department="tourism-management">Tourism Management</button>
+      <button class="department-btn" data-department="senior-highschool">Senior High School</button>
+    </div>
+  </div>
+
+    <!-- Recent Requests -->
     <section class="table-section">
       <br><br><h3>Recent Requests</h3>
       <table>
@@ -72,6 +109,18 @@
         </tbody>
       </table>
     </section>
+
+   <!-- Footer -->
+  <footer class="footer">
+    <p>© 2025 St. Bernadette of Lourdes College | All Rights Reserved.</p>
+    <p>
+      For support, contact 
+      <a href="mailto:support@sblc.edu.ph">support@sblc.edu.ph</a> 
+      or visit our 
+      <a href="https://www.facebook.com/sblc.inc.official/" target="_blank">SBLC Facebook Page</a>
+    </p>
+  </footer>
+
 
     <div class="overlay"></div>
     

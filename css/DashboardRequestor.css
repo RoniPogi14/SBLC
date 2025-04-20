@@ -49,6 +49,13 @@
     border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
+    text-decoration: none; /* Remove underline for <a> */
+    display: inline-block;
+    transition: background-color 0.3s;
+  }
+  
+  .logout-btn:hover {
+    background-color: #c7b6e6;
   }
   
   /* Navigation */
@@ -289,3 +296,11 @@ a:focus, a:active {
   pointer-events: none;
 }
 
+/* User Image*/
+.user-area img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%; /* Makes it a circle */
+  object-fit: cover;  /* Ensures the image fills the circle nicely */
+  border: 2px solid #f0c240; /* Optional: adds a gold border around the image */
+}

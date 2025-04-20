@@ -6,41 +6,46 @@
   <title>Requestor Dashboard</title>
   <link rel="stylesheet" href="../css/ViewAllMyRequests.css" />
 
-<body>
-  <!-- ✅ Top Header -->
-  <header class="top-header">
-    <div class="title">Document Request System</div>
-    <div class="user-area">
-      <span class="username">John Doe</span>
-      <span class="role">Requestor</span>
-      <button class="logout-btn">Logout</button>
-    </div>
-  </header>
-
-  <!-- ✅ Navigation Bar -->
-  <nav class="navbar">
-    <a href="DashboardRequestor.html" class="nav-btn active">Dashboard</a>
-    <a href="NewRequest.html" class="nav-btn">New Request</a>
-    <a href="MyRequest.html" class="nav-btn">My Request</a>
-    <a href="Home.html" class="nav-btn">HOME</a>
-  </nav>
-
-  <!-- ✅ Main Content - My Requests Section -->
-<main class="main-content">
-    <div class="request-container">
-      <div class="section-header">
-        <h2>My Requests</h2>
-        <button class="new-request-btn">New Request</button>
+  <body>
+    <!-- ✅ Top Header -->
+    <header class="top-header">
+      <div class="title">Document Request System</div>
+      <div class="user-area">
+        <img src="../images/John Doe.jpg" alt="Profile Image" />
+        <div>
+          <div class="username">John Doe</div>
+          <div class="role">Requestor</div>
+        </div>
+        <a href="Home.html" class="logout-btn">Logout</a>
       </div>
-  
-      <!-- Tabs -->
-      <div class="tabs">
-        <button class="tab active">All</button>
-        <button class="tab">Drafts</button>
-        <button class="tab">Pending</button>
-        <button class="tab">Approved</button>
-        <button class="tab">Completed</button>
-      </div>
+    </header>
+
+    <!-- ✅ Navigation Bar -->
+    <nav class="navbar">
+      <a href="DashboardRequestor.html" class="nav-btn active">Dashboard</a>
+      <a href="NewRequest.html" class="nav-btn">New Request</a>
+      <a href="MyRequest.html" class="nav-btn">My Request</a>
+      <a href="Home.html" class="nav-btn">HOME</a>
+    </nav>
+
+    <!-- ✅ Main Content - My Requests Section -->
+    <main class="main-content">
+        <div class="request-container">
+          <div class="section-header">
+            <h2>My Requests</h2>
+            <a href="NewRequest.html">
+              <button class="new-request-btn">New Request</button>
+            </a>
+          </div>
+    
+          <!-- Tabs -->
+          <div class="tabs">
+            <button class="tab active">All</button>
+            <button class="tab">Drafts</button>
+            <button class="tab">Pending</button>
+            <button class="tab">Approved</button>
+            <button class="tab">Completed</button>
+          </div>
   
       <!-- Request Table -->
       <table class="request-table">
