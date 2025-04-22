@@ -40,7 +40,7 @@ const DB = {
             id: 2, 
             title: 'Travel Request',
             description: 'Conference travel request for the marketing team',
-            status: 'waiting_approval',
+            status: 'pending',
             createdBy: 1,
             createdAt: '2025-03-01',
             deadline: '2025-03-05',
@@ -80,7 +80,7 @@ const DB = {
             id: 4, 
             title: 'Budget Approval for Q2',
             description: 'Need approval for Q2 budget for marketing department',
-            status: 'on_hold',
+            status: 'pending',
             createdBy: 2, // Jane (Finance approver) created this request
             createdAt: '2025-03-03',
             deadline: '2025-03-20',
@@ -113,7 +113,7 @@ const DB = {
             id: 5, 
             title: 'Software License Renewal',
             description: 'Annual renewal for development team software licenses',
-            status: 'in_review',
+            status: 'pending',
             createdBy: 4, // Sarah (IT approver) created this request
             createdAt: '2025-03-04',
             deadline: '2025-03-25',

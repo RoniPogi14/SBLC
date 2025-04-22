@@ -418,64 +418,6 @@ function loadNewRequestForm() {
     });
 }
 
-// Fix for the saveRequest function to capture initial files
-function saveRequest(status) {
-    const title = document.getElementById('request-title').value;
-    const description = document.getElementById('request-description').value;
-    const deadline = document.getElementById('request-deadline')?.value || '';
-    const urgent = document.getElementById('request-urgent')?.checked || false;
-    const fileInput = document.getElementById('request-files');
-    
-    if (!title || !description) {
-        alert('Please fill in all required fields');
-        return;
-    }
-    
-    const newRequest = {
-        id: DB.requests.length + 1,
-        title,
-        description,
-        status,
-        createdBy: currentUser.id,
-        createdAt: new Date().toISOString().split('T')[0],
-        assignedTo: status === 'draft' ? null : 'All Departments', // Now automatically assign to All Departments
-        deadline: deadline,
-        urgent: urgent,
-        approvals: {},
-        documents: [],
-        initialFiles: []
-    };
-    
-    // Process uploaded files
-    if (fileInput && fileInput.files.length > 0) {
-        Array.from(fileInput.files).forEach(file => {
-            newRequest.initialFiles.push({
-                name: file.name,
-                uploadedAt: new Date().toISOString().split('T')[0]
-            });
-        });
-    }
-    
-    // Set up approvals for all departments if not a draft
-    if (status !== 'draft') {
-        const departments = ['Finance', 'HR', 'IT', 'Operations'];
-        departments.forEach(dept => {
-            newRequest.approvals[dept] = {
-                signed: false,
-                signedBy: null,
-                signedAt: null,
-                comments: null,
-                signature: null
-            };
-        });
-    }
-    
-    DB.requests.push(newRequest);
-    
-    alert(`Request ${status === 'draft' ? 'saved as draft' : 'submitted'} successfully`);
-    loadMyRequests();
-}
-
 function loadMyRequests() {
     const myRequests = DB.requests.filter(r => r.createdBy === currentUser.id);
     
@@ -642,6 +584,605 @@ function loadUserManagement() {
     window.deleteUser = deleteUser;
 }
 
+// Fix for the saveRequest function to capture initial files
+function saveRequest(status) {
+    const title = document.getElementById('request-title').value;
+    const description = document.getElementById('request-description').value;
+    const deadline = document.getElementById('request-deadline')?.value || '';
+    const urgent = document.getElementById('request-urgent')?.checked || false;
+    const fileInput = document.getElementById('request-files');
+    
+    if (!title || !description) {
+        alert('Please fill in all required fields');
+        return;
+    }
+    
+    const newRequest = {
+        id: DB.requests.length + 1,
+        title,
+        description,
+        status,
+        createdBy: currentUser.id,
+        createdAt: new Date().toISOString().split('T')[0],
+        assignedTo: status === 'draft' ? null : 'All Departments', // Now automatically assign to All Departments
+        deadline: deadline,
+        urgent: urgent,
+        approvals: {},
+        documents: [],
+        initialFiles: []
+    };
+    
+    // Process uploaded files
+    if (fileInput && fileInput.files.length > 0) {
+        Array.from(fileInput.files).forEach(file => {
+            newRequest.initialFiles.push({
+                name: file.name,
+                uploadedAt: new Date().toISOString().split('T')[0]
+            });
+        });
+    }
+    
+    // Set up approvals for all departments if not a draft
+    if (status !== 'draft') {
+        const departments = ['Finance', 'HR', 'IT', 'Operations'];
+        departments.forEach(dept => {
+            newRequest.approvals[dept] = {
+                signed: false,
+                signedBy: null,
+                signedAt: null,
+                comments: null,
+                signature: null
+            };
+        });
+    }
+    
+    DB.requests.push(newRequest);
+    
+    alert(`Request ${status === 'draft' ? 'saved as draft' : 'submitted'} successfully`);
+    loadMyRequests();
+}
+
+function editRequestAdmin(requestId) {
+    const request = DB.requests.find(r => r.id === requestId);
+    
+    if (!request || currentUser.role !== 'admin') {
+        alert('Cannot edit this request');
+        return;
+    }
+    
+    mainContentElement.innerHTML = `
+        <div class="card">
+            <div class="card-header">
+                <h2>Edit Request (Admin)</h2>
+            </div>
+            <div>
+                <div class="form-group">
+                    <label for="admin-edit-title">Request Title</label>
+                    <input type="text" id="admin-edit-title" value="${request.title}">
+                </div>
+                <div class="form-group">
+                    <label for="admin-edit-description">Description</label>
+                    <textarea id="admin-edit-description">${request.description}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="admin-edit-status">Status</label>
+                    <select id="admin-edit-status">
+                        <option value="draft" ${request.status === 'draft' ? 'selected' : ''}>Draft</option>
+                        <option value="pending" ${request.status === 'pending' ? 'selected' : ''}>Pending</option>
+                        <option value="approved" ${request.status === 'approved' ? 'selected' : ''}>Approved</option>
+                        <option value="rejected" ${request.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+                        <option value="completed" ${request.status === 'completed' ? 'selected' : ''}>Completed</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="secondary" onclick="viewRequest(${request.id})">Cancel</button>
+                    <button id="admin-update-btn" class="success">Update Request</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('admin-update-btn').addEventListener('click', () => {
+        const title = document.getElementById('admin-edit-title').value;
+        const description = document.getElementById('admin-edit-description').value;
+        const status = document.getElementById('admin-edit-status').value;
+        
+        if (!title || !description) {
+            alert('Please fill in all required fields');
+            return;
+        }
+        
+        // Update request
+        request.title = title;
+        request.description = description;
+        request.status = status;
+        
+        alert('Request updated successfully');
+        viewRequest(request.id);
+    });
+}
+
+function submitRequest(requestId) {
+    const request = DB.requests.find(r => r.id === requestId);
+    
+    if (!request || request.status !== 'draft' || request.createdBy !== currentUser.id) {
+        alert('Cannot submit this request');
+        return;
+    }
+    
+    // Show confirmation modal with deadline selection
+    const today = new Date().toISOString().split('T')[0];
+    
+    const modalContent = `
+        <p>You're about to submit this request for approval.</p>
+        
+        <div class="form-group">
+            <label for="request-deadline">Deadline <span class="required">*</span></label>
+            <input type="date" id="request-deadline" min="${today}" value="${request.deadline || ''}">
+            <small>Please set a deadline for when this request needs to be processed.</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="request-urgent">
+                <input type="checkbox" id="request-urgent" style="width: auto; margin-right: 8px;" ${request.urgent ? 'checked' : ''}>
+                Mark as Urgent
+            </label>
+            <small>Check this if the request needs immediate attention.</small>
+        </div>
+    `;
+    
+    showModal('Submit Request', modalContent, [
+        {
+            text: 'Cancel',
+            class: 'secondary',
+            action: () => {
+                modalContainer.style.display = 'none';
+            }
+        },
+        {
+            text: 'Submit Request',
+            class: 'success',
+            action: () => {
+                const deadline = document.getElementById('request-deadline').value;
+                const urgent = document.getElementById('request-urgent').checked;
+                
+                if (!deadline) {
+                    alert('Please specify a deadline');
+                    return;
+                }
+                
+                request.status = 'pending';
+                request.assignedTo = 'All Departments';
+                request.deadline = deadline;
+                request.urgent = urgent;
+                
+                // Set up approvals for all departments
+                const departments = ['Finance', 'HR', 'IT', 'Operations'];
+                departments.forEach(dept => {
+                    request.approvals[dept] = {
+                        signed: false,
+                        signedBy: null,
+                        signedAt: null,
+                        comments: null,
+                        signature: null
+                    };
+                });
+                
+                alert('Request submitted successfully');
+                modalContainer.style.display = 'none';
+                viewRequest(request.id);
+            }
+        }
+    ]);
+}
+
+function approveRequest(requestId) {
+    const request = DB.requests.find(r => r.id === requestId);
+    
+    // Allow approvers to sign even if status is already "approved"
+    if (!request || 
+        (request.status !== 'pending' && request.status !== 'approved') || 
+        (request.assignedTo !== currentUser.department && request.assignedTo !== 'All Departments') ||
+        !request.approvals[currentUser.department] ||
+        request.approvals[currentUser.department].signed) {
+        alert('Cannot approve this request');
+        return;
+    }
+    
+    const modalContent = `
+        <div class="form-group">
+            <label for="approval-comments">Comments (optional)</label>
+            <textarea id="approval-comments" placeholder="Enter any comments about this approval"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="signature-pad">Signature</label>
+            <div class="signature-pad-container">
+                <canvas id="signature-pad" width="400" height="200"></canvas>
+            </div>
+            <div class="signature-pad-controls">
+                <button type="button" id="clear-signature" class="secondary">Clear</button>
+            </div>
+        </div>
+    `;
+    
+    showModal('Approve Request', modalContent, [
+        {
+            text: 'Cancel',
+            class: 'secondary',
+            action: () => {
+                modalContainer.style.display = 'none';
+            }
+        },
+        {
+            text: 'Sign & Approve',
+            class: 'success',
+            action: () => {
+                const comments = document.getElementById('approval-comments').value;
+                const signatureData = signaturePad.toDataURL();
+                
+                if (signaturePad.isEmpty()) {
+                    alert('Please provide a signature');
+                    return;
+                }
+                
+                // Update approval
+                request.approvals[currentUser.department] = {
+                    signed: true,
+                    signedBy: currentUser.id,
+                    signedAt: new Date().toISOString().split('T')[0],
+                    comments: comments,
+                    signature: signatureData
+                };
+                
+                // After department approves with signature,
+                // check if all departments have signed
+                if (request.assignedTo === 'All Departments') {
+                    const allDepartments = ['Finance', 'HR', 'IT', 'Operations'];
+                    const allSigned = allDepartments.every(dept => 
+                        request.approvals[dept] && request.approvals[dept].signed
+                    );
+                    
+                    if (allSigned) {
+                        // All departments have signed, mark as completed
+                        request.status = 'completed';
+                    } else {
+                        // Not all have signed, but this department has
+                        request.status = 'approved';
+                    }
+                } else {
+                    // Single department assignment, mark as approved
+                    request.status = 'approved';
+                }
+                
+                alert('Request signed successfully');
+                modalContainer.style.display = 'none';
+                viewRequest(request.id);
+            }
+        }
+    ]);
+    
+    // Initialize signature pad
+    const canvas = document.getElementById('signature-pad');
+    const signaturePad = new SignaturePad(canvas, {
+        backgroundColor: 'rgb(255, 255, 255)',
+        penColor: 'rgb(38, 34, 92)'
+    });
+    
+    // Clear button
+    document.getElementById('clear-signature').addEventListener('click', () => {
+        signaturePad.clear();
+    });
+}
+
+function rejectRequest(requestId) {
+    const request = DB.requests.find(r => r.id === requestId);
+    
+    if (!request || 
+        (request.status !== 'pending' && request.status !== 'approved') || 
+        (request.assignedTo !== currentUser.department && request.assignedTo !== 'All Departments') ||
+        !request.approvals[currentUser.department] ||
+        request.approvals[currentUser.department].signed) {
+        alert('Cannot reject this request');
+        return;
+    }
+    
+    const modalContent = `
+        <div class="form-group">
+            <label for="rejection-comments">Rejection Reason (required)</label>
+            <textarea id="rejection-comments" placeholder="Enter the reason for rejecting this request"></textarea>
+        </div>
+    `;
+    
+    showModal('Reject Request', modalContent, [
+        {
+            text: 'Cancel',
+            class: 'secondary',
+            action: () => {
+                modalContainer.style.display = 'none';
+            }
+        },
+        {
+            text: 'Reject',
+            class: 'danger',
+            action: () => {
+                const comments = document.getElementById('rejection-comments').value;
+                
+                if (!comments) {
+                    alert('Please provide a reason for rejection');
+                    return;
+                }
+                
+                // Update request status
+                request.status = 'rejected';
+                
+                // Update approval
+                request.approvals[currentUser.department] = {
+                    signed: false,
+                    signedBy: currentUser.id,
+                    signedAt: new Date().toISOString().split('T')[0],
+                    comments: comments,
+                    signature: null
+                };
+                
+                alert('Request rejected successfully');
+                modalContainer.style.display = 'none';
+                viewRequest(request.id);
+            }
+        }
+    ]);
+}
+
+function uploadDocuments(requestId) {
+    const request = DB.requests.find(r => r.id === requestId);
+    
+    if (!request) {
+        alert('Request not found');
+        return;
+    }
+    
+    mainContentElement.innerHTML = `
+        <div class="card">
+            <div class="card-header">
+                <h2>Upload Documents for Request #${requestId}</h2>
+            </div>
+            <div>
+                <p>Upload required documents for your request "${request.title}"</p>
+                
+                <div class="form-group">
+                    <label for="upload-files">Select Files <span class="required">*</span></label>
+                    <input type="file" id="upload-files" multiple>
+                    <small>Please select one or more files to upload</small>
+                </div>
+                
+                <h3>Selected Files</h3>
+                <ul class="file-list" id="selected-files-list"></ul>
+                
+                <h3>Previously Uploaded Documents</h3>
+                <ul class="file-list" id="existing-files-list">
+                    ${request.documents.map(doc => `
+                        <li class="file-item">
+                            <div class="file-name">
+                                <span>📄</span>
+                                <span>${doc.name}</span>
+                            </div>
+                            <div>Uploaded on ${formatDate(doc.uploadedAt)}</div>
+                        </li>
+                    `).join('')}
+                </ul>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="secondary" id="back-button">Back to Request</button>
+                    <button class="success" id="save-documents-btn">Upload Documents</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Set up file input event handling
+    const fileInput = document.getElementById('upload-files');
+    const filesList = document.getElementById('selected-files-list');
+    
+    fileInput.addEventListener('change', () => {
+        filesList.innerHTML = '';
+        
+        if (fileInput.files.length > 0) {
+            Array.from(fileInput.files).forEach(file => {
+                const listItem = document.createElement('li');
+                listItem.className = 'file-item';
+                listItem.innerHTML = `
+                    <div class="file-name">
+                        <span>📄</span>
+                        <span>${file.name}</span>
+                    </div>
+                    <div>Selected for upload</div>
+                `;
+                filesList.appendChild(listItem);
+            });
+        }
+    });
+    
+    // Set up back button
+    document.getElementById('back-button').addEventListener('click', () => {
+        viewRequest(requestId);
+    });
+    
+    // Set up save button
+    document.getElementById('save-documents-btn').addEventListener('click', () => {
+        const files = fileInput.files;
+        
+        if (files.length === 0) {
+            alert('Please select at least one file to upload');
+            return;
+        }
+        
+        // Add files to request
+        Array.from(files).forEach(file => {
+            request.documents.push({
+                name: file.name,
+                uploadedAt: new Date().toISOString().split('T')[0]
+            });
+        });
+        
+        alert('Documents uploaded successfully');
+        viewRequest(requestId);
+    });
+}
+
+// Admin Functions
+function editRequestAdmin(requestId) {
+    const request = DB.requests.find(r => r.id === requestId);
+    
+    if (!request || currentUser.role !== 'admin') {
+        alert('Cannot edit this request');
+        return;
+    }
+    
+    mainContentElement.innerHTML = `
+        <div class="card">
+            <div class="card-header">
+                <h2>Edit Request (Admin)</h2>
+            </div>
+            <div>
+                <div class="form-group">
+                    <label for="admin-edit-title">Request Title</label>
+                    <input type="text" id="admin-edit-title" value="${request.title}">
+                </div>
+                <div class="form-group">
+                    <label for="admin-edit-description">Description</label>
+                    <textarea id="admin-edit-description">${request.description}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="admin-edit-status">Status</label>
+                    <select id="admin-edit-status">
+                        <option value="draft" ${request.status === 'draft' ? 'selected' : ''}>Draft</option>
+                        <option value="pending" ${request.status === 'pending' ? 'selected' : ''}>Pending</option>
+                        <option value="approved" ${request.status === 'approved' ? 'selected' : ''}>Approved</option>
+                        <option value="rejected" ${request.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+                        <option value="completed" ${request.status === 'completed' ? 'selected' : ''}>Completed</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="secondary" onclick="viewRequest(${request.id})">Cancel</button>
+                    <button id="admin-update-btn" class="success">Update Request</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('admin-update-btn').addEventListener('click', () => {
+        const title = document.getElementById('admin-edit-title').value;
+        const description = document.getElementById('admin-edit-description').value;
+        const status = document.getElementById('admin-edit-status').value;
+        
+        if (!title || !description) {
+            alert('Please fill in all required fields');
+            return;
+        }
+        
+        // Update request
+        request.title = title;
+        request.description = description;
+        request.status = status;
+        
+        alert('Request updated successfully');
+        viewRequest(request.id);
+    });
+}
+
+function adminApproveRequest(requestId) {
+    const request = DB.requests.find(r => r.id === requestId);
+    
+    if (!request || request.status !== 'pending' || currentUser.role !== 'admin') {
+        alert('Cannot approve this request');
+        return;
+    }
+    
+    const modalContent = `
+        <div class="form-group">
+            <label for="admin-approval-comments">Admin Comments (optional)</label>
+            <textarea id="admin-approval-comments" placeholder="Enter any comments or notes about this approval"></textarea>
+        </div>
+    `;
+    
+    showModal('Admin Approval', modalContent, [
+        {
+            text: 'Cancel',
+            class: 'secondary',
+            action: () => {
+                modalContainer.style.display = 'none';
+            }
+        },
+        {
+            text: 'Approve Request',
+            class: 'success',
+            action: () => {
+                const comments = document.getElementById('admin-approval-comments').value;
+                
+                // Admin approval changes status to "approved" but still requires department signatures
+                request.status = 'approved';
+                request.assignedTo = 'All Departments';
+                request.adminApproved = true;
+                request.adminApprovedAt = new Date().toISOString().split('T')[0];
+                request.adminComments = comments;
+                
+                alert('Request approved. Departments will now review and sign it.');
+                modalContainer.style.display = 'none';
+                viewRequest(request.id);
+            }
+        }
+    ]);
+}
+
+function adminRejectRequest(requestId) {
+    const request = DB.requests.find(r => r.id === requestId);
+    
+    if (!request || request.status !== 'pending' || currentUser.role !== 'admin') {
+        alert('Cannot reject this request');
+        return;
+    }
+    
+    const modalContent = `
+        <div class="form-group">
+            <label for="admin-rejection-comments">Rejection Reason (required)</label>
+            <textarea id="admin-rejection-comments" placeholder="Enter the reason for rejecting this request"></textarea>
+        </div>
+    `;
+    
+    showModal('Reject Request', modalContent, [
+        {
+            text: 'Cancel',
+            class: 'secondary',
+            action: () => {
+                modalContainer.style.display = 'none';
+            }
+        },
+        {
+            text: 'Reject',
+            class: 'danger',
+            action: () => {
+                const comments = document.getElementById('admin-rejection-comments').value;
+                
+                if (!comments) {
+                    alert('Please provide a reason for rejection');
+                    return;
+                }
+                
+                // Update request status
+                request.status = 'rejected';
+                request.adminRejected = true;
+                request.adminRejectedAt = new Date().toISOString().split('T')[0];
+                request.adminComments = comments;
+                
+                alert('Request rejected successfully');
+                modalContainer.style.display = 'none';
+                viewRequest(request.id);
+            }
+        }
+    ]);
+}
+
+// User Management Functions
 function showAddUserModal() {
     const modalContent = `
         <div class="form-group">
@@ -871,7 +1412,8 @@ function deleteUser(userId) {
         },
         {
             text: 'Delete',
-            class: 'danger',action: () => {
+            class: 'danger',
+            action: () => {
                 // Remove user from database
                 const index = DB.users.findIndex(u => u.id === userId);
                 DB.users.splice(index, 1);
@@ -884,7 +1426,7 @@ function deleteUser(userId) {
     ]);
 }
 
-// Update the document section in viewRequest to make documents clickable
+//Document Management Functions
 function viewRequest(requestId) {
     const request = DB.requests.find(r => r.id === requestId);
     
@@ -899,7 +1441,7 @@ function viewRequest(requestId) {
     let documentSection = '';
     let actionButtons = '';
     
-    // Approvals section (unchanged, keeping for completeness)
+    // Approvals section
     if (request.status !== 'draft') {
         const departments = ['Finance', 'HR', 'IT', 'Operations'];
         
@@ -944,7 +1486,7 @@ function viewRequest(requestId) {
         `;
     }
     
-    // Updated Documents section - Make documents clickable
+    // Document section with clickable documents
     documentSection = `
         <h3>Initial Files</h3>
         ${request.initialFiles && request.initialFiles.length > 0 ? 
@@ -979,7 +1521,7 @@ function viewRequest(requestId) {
         }
     `;
     
-    // Action buttons (same as before)
+    // Action buttons based on user role and request status
     if (currentUser.role === 'requestor' && request.createdBy === currentUser.id) {
         if (request.status === 'draft') {
             actionButtons = `
@@ -1127,7 +1669,6 @@ function viewRequest(requestId) {
     window.viewDocument = viewDocument;
 }
 
-// Add a document viewer function to view document content
 function viewDocument(requestId, docName, isInitialFile = false) {
     const request = DB.requests.find(r => r.id === requestId);
     
@@ -1344,530 +1885,6 @@ function viewDocument(requestId, docName, isInitialFile = false) {
     ]);
 }
 
-function editRequest(requestId) {
-    const request = DB.requests.find(r => r.id === requestId);
-    
-    if (!request || request.status !== 'draft' || request.createdBy !== currentUser.id) {
-        alert('Cannot edit this request');
-        return;
-    }
-    
-    mainContentElement.innerHTML = `
-        <div class="card">
-            <div class="card-header">
-                <h2>Edit Request</h2>
-            </div>
-            <div>
-                <div class="form-group">
-                    <label for="edit-request-title">Request Title</label>
-                    <input type="text" id="edit-request-title" value="${request.title}">
-                </div>
-                <div class="form-group">
-                    <label for="edit-request-description">Description</label>
-                    <textarea id="edit-request-description">${request.description}</textarea>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <button class="secondary" onclick="viewRequest(${request.id})">Cancel</button>
-                    <button id="update-draft-btn" class="success">Update Draft</button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.getElementById('update-draft-btn').addEventListener('click', () => {
-        const title = document.getElementById('edit-request-title').value;
-        const description = document.getElementById('edit-request-description').value;
-        
-        if (!title || !description) {
-            alert('Please fill in all required fields');
-            return;
-        }
-        
-        request.title = title;
-        request.description = description;
-        
-        alert('Draft updated successfully');
-        viewRequest(request.id);
-    });
-}
-
-function submitRequest(requestId) {
-    const request = DB.requests.find(r => r.id === requestId);
-    
-    if (!request || request.status !== 'draft' || request.createdBy !== currentUser.id) {
-        alert('Cannot submit this request');
-        return;
-    }
-    
-    // Show confirmation modal with deadline selection
-    const today = new Date().toISOString().split('T')[0];
-    
-    const modalContent = `
-        <p>You're about to submit this request for approval.</p>
-        
-        <div class="form-group">
-            <label for="request-deadline">Deadline <span class="required">*</span></label>
-            <input type="date" id="request-deadline" min="${today}" value="${request.deadline || ''}">
-            <small>Please set a deadline for when this request needs to be processed.</small>
-        </div>
-        
-        <div class="form-group">
-            <label for="request-urgent">
-                <input type="checkbox" id="request-urgent" style="width: auto; margin-right: 8px;" ${request.urgent ? 'checked' : ''}>
-                Mark as Urgent
-            </label>
-            <small>Check this if the request needs immediate attention.</small>
-        </div>
-    `;
-    
-    showModal('Submit Request', modalContent, [
-        {
-            text: 'Cancel',
-            class: 'secondary',
-            action: () => {
-                modalContainer.style.display = 'none';
-            }
-        },
-        {
-            text: 'Submit Request',
-            class: 'success',
-            action: () => {
-                const deadline = document.getElementById('request-deadline').value;
-                const urgent = document.getElementById('request-urgent').checked;
-                
-                if (!deadline) {
-                    alert('Please specify a deadline');
-                    return;
-                }
-                
-                request.status = 'pending';
-                request.assignedTo = 'All Departments';
-                request.deadline = deadline;
-                request.urgent = urgent;
-                
-                // Set up approvals for all departments
-                const departments = ['Finance', 'HR', 'IT', 'Operations'];
-                departments.forEach(dept => {
-                    request.approvals[dept] = {
-                        signed: false,
-                        signedBy: null,
-                        signedAt: null,
-                        comments: null,
-                        signature: null
-                    };
-                });
-                
-                alert('Request submitted successfully');
-                modalContainer.style.display = 'none';
-                viewRequest(request.id);
-            }
-        }
-    ]);
-}
-
-// Fix for the uploadDocuments function to properly handle file uploads
-function uploadDocuments(requestId) {
-    const request = DB.requests.find(r => r.id === requestId);
-    
-    if (!request) {
-        alert('Request not found');
-        return;
-    }
-    
-    mainContentElement.innerHTML = `
-        <div class="card">
-            <div class="card-header">
-                <h2>Upload Documents for Request #${requestId}</h2>
-            </div>
-            <div>
-                <p>Upload required documents for your request "${request.title}"</p>
-                
-                <div class="form-group">
-                    <label for="upload-files">Select Files <span class="required">*</span></label>
-                    <input type="file" id="upload-files" multiple>
-                    <small>Please select one or more files to upload</small>
-                </div>
-                
-                <h3>Selected Files</h3>
-                <ul class="file-list" id="selected-files-list"></ul>
-                
-                <h3>Previously Uploaded Documents</h3>
-                <ul class="file-list" id="existing-files-list">
-                    ${request.documents.map(doc => `
-                        <li class="file-item">
-                            <div class="file-name">
-                                <span>📄</span>
-                                <span>${doc.name}</span>
-                            </div>
-                            <div>Uploaded on ${formatDate(doc.uploadedAt)}</div>
-                        </li>
-                    `).join('')}
-                </ul>
-                
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button class="secondary" id="back-button">Back to Request</button>
-                    <button class="success" id="save-documents-btn">Upload Documents</button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // Set up file input event handling
-    const fileInput = document.getElementById('upload-files');
-    const filesList = document.getElementById('selected-files-list');
-    
-    fileInput.addEventListener('change', () => {
-        filesList.innerHTML = '';
-        
-        if (fileInput.files.length > 0) {
-            Array.from(fileInput.files).forEach(file => {
-                const listItem = document.createElement('li');
-                listItem.className = 'file-item';
-                listItem.innerHTML = `
-                    <div class="file-name">
-                        <span>📄</span>
-                        <span>${file.name}</span>
-                    </div>
-                    <div>Selected for upload</div>
-                `;
-                filesList.appendChild(listItem);
-            });
-        }
-    });
-    
-    // Set up back button
-    document.getElementById('back-button').addEventListener('click', () => {
-        viewRequest(requestId);
-    });
-    
-    // Set up save button
-    document.getElementById('save-documents-btn').addEventListener('click', () => {
-        const files = fileInput.files;
-        
-        if (files.length === 0) {
-            alert('Please select at least one file to upload');
-            return;
-        }
-        
-        // Add files to request
-        Array.from(files).forEach(file => {
-            request.documents.push({
-                name: file.name,
-                uploadedAt: new Date().toISOString().split('T')[0]
-            });
-        });
-        
-        alert('Documents uploaded successfully');
-        viewRequest(requestId);
-    });
-}
-
-
-function approveRequest(requestId) {
-    const request = DB.requests.find(r => r.id === requestId);
-    
-    // Allow approvers to sign even if status is already "approved"
-    if (!request || 
-        (request.status !== 'pending' && request.status !== 'approved') || 
-        (request.assignedTo !== currentUser.department && request.assignedTo !== 'All Departments') ||
-        !request.approvals[currentUser.department] ||
-        request.approvals[currentUser.department].signed) {
-        alert('Cannot approve this request');
-        return;
-    }
-    
-    const modalContent = `
-        <div class="form-group">
-            <label for="approval-comments">Comments (optional)</label>
-            <textarea id="approval-comments" placeholder="Enter any comments about this approval"></textarea>
-        </div>
-        
-        <div class="form-group">
-            <label for="signature-pad">Signature</label>
-            <div class="signature-pad-container">
-                <canvas id="signature-pad" width="400" height="200"></canvas>
-            </div>
-            <div class="signature-pad-controls">
-                <button type="button" id="clear-signature" class="secondary">Clear</button>
-            </div>
-        </div>
-    `;
-    
-    showModal('Approve Request', modalContent, [
-        {
-            text: 'Cancel',
-            class: 'secondary',
-            action: () => {
-                modalContainer.style.display = 'none';
-            }
-        },
-        {
-            text: 'Sign & Approve',
-            class: 'success',
-            action: () => {
-                const comments = document.getElementById('approval-comments').value;
-                const signatureData = signaturePad.toDataURL();
-                
-                if (signaturePad.isEmpty()) {
-                    alert('Please provide a signature');
-                    return;
-                }
-                
-                // Update approval
-                request.approvals[currentUser.department] = {
-                    signed: true,
-                    signedBy: currentUser.id,
-                    signedAt: new Date().toISOString().split('T')[0],
-                    comments: comments,
-                    signature: signatureData
-                };
-                
-                // After department approves with signature,
-                // check if all departments have signed
-                if (request.assignedTo === 'All Departments') {
-                    const allDepartments = ['Finance', 'HR', 'IT', 'Operations'];
-                    const allSigned = allDepartments.every(dept => 
-                        request.approvals[dept] && request.approvals[dept].signed
-                    );
-                    
-                    if (allSigned) {
-                        // All departments have signed, mark as completed
-                        request.status = 'completed';
-                    }
-                } else {
-                    // Single department assignment, mark as approved
-                    request.status = 'approved';
-                }
-                
-                alert('Request signed successfully');
-                modalContainer.style.display = 'none';
-                viewRequest(request.id);
-            }
-        }
-    ]);
-    
-    // Initialize signature pad
-    const canvas = document.getElementById('signature-pad');
-    const signaturePad = new SignaturePad(canvas, {
-        backgroundColor: 'rgb(255, 255, 255)',
-        penColor: 'rgb(38, 34, 92)'
-    });
-    
-    // Clear button
-    document.getElementById('clear-signature').addEventListener('click', () => {
-        signaturePad.clear();
-    });
-}
-
-function rejectRequest(requestId) {
-    const request = DB.requests.find(r => r.id === requestId);
-    
-    if (!request || 
-        (request.status !== 'pending' && request.status !== 'approved') || 
-        (request.assignedTo !== currentUser.department && request.assignedTo !== 'All Departments') ||
-        !request.approvals[currentUser.department] ||
-        request.approvals[currentUser.department].signed) {
-        alert('Cannot reject this request');
-        return;
-    }
-    
-    const modalContent = `
-        <div class="form-group">
-            <label for="rejection-comments">Rejection Reason (required)</label>
-            <textarea id="rejection-comments" placeholder="Enter the reason for rejecting this request"></textarea>
-        </div>
-    `;
-    
-    showModal('Reject Request', modalContent, [
-        {
-            text: 'Cancel',
-            class: 'secondary',
-            action: () => {
-                modalContainer.style.display = 'none';
-            }
-        },
-        {
-            text: 'Reject',
-            class: 'danger',
-            action: () => {
-                const comments = document.getElementById('rejection-comments').value;
-                
-                if (!comments) {
-                    alert('Please provide a reason for rejection');
-                    return;
-                }
-                
-                // Update request status
-                request.status = 'rejected';
-                
-                // Update approval
-                request.approvals[currentUser.department] = {
-                    signed: false,
-                    signedBy: currentUser.id,
-                    signedAt: new Date().toISOString().split('T')[0],
-                    comments: comments,
-                    signature: null
-                };
-                
-                alert('Request rejected successfully');
-                modalContainer.style.display = 'none';
-                viewRequest(request.id);
-            }
-        }
-    ]);
-}
-
-function editRequestAdmin(requestId) {
-    const request = DB.requests.find(r => r.id === requestId);
-    
-    if (!request || currentUser.role !== 'admin') {
-        alert('Cannot edit this request');
-        return;
-    }
-    
-    mainContentElement.innerHTML = `
-        <div class="card">
-            <div class="card-header">
-                <h2>Edit Request (Admin)</h2>
-            </div>
-            <div>
-                <div class="form-group">
-                    <label for="admin-edit-title">Request Title</label>
-                    <input type="text" id="admin-edit-title" value="${request.title}">
-                </div>
-                <div class="form-group">
-                    <label for="admin-edit-description">Description</label>
-                    <textarea id="admin-edit-description">${request.description}</textarea>
-                </div>
-                <div class="form-group">
-                    <label for="admin-edit-status">Status</label>
-                    <select id="admin-edit-status">
-                        <option value="draft" ${request.status === 'draft' ? 'selected' : ''}>Draft</option>
-                        <option value="pending" ${request.status === 'pending' ? 'selected' : ''}>Pending</option>
-                        <option value="approved" ${request.status === 'approved' ? 'selected' : ''}>Approved</option>
-                        <option value="rejected" ${request.status === 'rejected' ? 'selected' : ''}>Rejected</option>
-                    </select>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <button class="secondary" onclick="viewRequest(${request.id})">Cancel</button>
-                    <button id="admin-update-btn" class="success">Update Request</button>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.getElementById('admin-update-btn').addEventListener('click', () => {
-        const title = document.getElementById('admin-edit-title').value;
-        const description = document.getElementById('admin-edit-description').value;
-        const status = document.getElementById('admin-edit-status').value;
-        
-        if (!title || !description) {
-            alert('Please fill in all required fields');
-            return;
-        }
-        
-        // Update request
-        request.title = title;
-        request.description = description;
-        request.status = status;
-        
-        alert('Request updated successfully');
-        viewRequest(request.id);
-    });
-}
-
-function adminApproveRequest(requestId) {
-    const request = DB.requests.find(r => r.id === requestId);
-    
-    if (!request || request.status !== 'pending' || currentUser.role !== 'admin') {
-        alert('Cannot approve this request');
-        return;
-    }
-    
-    const modalContent = `
-        <div class="form-group">
-            <label for="admin-approval-comments">Admin Comments (optional)</label>
-            <textarea id="admin-approval-comments" placeholder="Enter any comments or notes about this approval"></textarea>
-        </div>
-    `;
-    
-    showModal('Admin Approval', modalContent, [
-        {
-            text: 'Cancel',
-            class: 'secondary',
-            action: () => {
-                modalContainer.style.display = 'none';
-            }
-        },
-        {
-            text: 'Approve Request',
-            class: 'success',
-            action: () => {
-                const comments = document.getElementById('admin-approval-comments').value;
-                
-                // Admin approval changes status to "approved" but still requires department signatures
-                request.status = 'approved';
-                request.assignedTo = 'All Departments';
-                request.adminApproved = true;
-                request.adminApprovedAt = new Date().toISOString().split('T')[0];
-                request.adminComments = comments;
-                
-                alert('Request approved. Departments will now review and sign it.');
-                modalContainer.style.display = 'none';
-                viewRequest(request.id);
-            }
-        }
-    ]);
-}
-
-function adminRejectRequest(requestId) {
-    const request = DB.requests.find(r => r.id === requestId);
-    
-    if (!request || request.status !== 'pending' || currentUser.role !== 'admin') {
-        alert('Cannot reject this request');
-        return;
-    }
-    
-    const modalContent = `
-        <div class="form-group">
-            <label for="admin-rejection-comments">Rejection Reason (required)</label>
-            <textarea id="admin-rejection-comments" placeholder="Enter the reason for rejecting this request"></textarea>
-        </div>
-    `;
-    
-    showModal('Reject Request', modalContent, [
-        {
-            text: 'Cancel',
-            class: 'secondary',
-            action: () => {
-                modalContainer.style.display = 'none';
-            }
-        },
-        {
-            text: 'Reject',
-            class: 'danger',
-            action: () => {
-                const comments = document.getElementById('admin-rejection-comments').value;
-                
-                if (!comments) {
-                    alert('Please provide a reason for rejection');
-                    return;
-                }
-                
-                // Update request status
-                request.status = 'rejected';
-                request.adminRejected = true;
-                request.adminRejectedAt = new Date().toISOString().split('T')[0];
-                request.adminComments = comments;
-                
-                alert('Request rejected successfully');
-                modalContainer.style.display = 'none';
-                viewRequest(request.id);
-            }
-        }
-    ]);
-}
-
 // Helper Functions
 function getRequestsTableHTML(requests, withActions = false) {
     if (requests.length === 0) {
@@ -1949,6 +1966,98 @@ function getRequestsTableHTML(requests, withActions = false) {
     `;
 }
 
+function addDocumentViewerStyles() {
+    // This function will be called to add styles for document viewer
+    if (document.getElementById('document-viewer-styles')) {
+        return; // Already added
+    }
+    
+    const style = document.createElement('style');
+    style.id = 'document-viewer-styles';
+    style.textContent = `
+        .document-viewer {
+            padding: 20px;
+        }
+        
+        .document-info {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .info-item {
+            margin-bottom: 10px;
+        }
+        
+        .document-content {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .document-preview {
+            background-color: white;
+            padding: 20px;
+        }
+        
+        .preview-header {
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .pdf-preview, .word-preview, .excel-preview, .image-preview {
+            min-height: 400px;
+        }
+    `;
+    
+    document.head.appendChild(style);
+}
+
+function initializeSignaturePad() {
+    const canvas = document.getElementById('signature-pad');
+    const canvasContainer = canvas.parentElement;
+    
+    // First, fix the canvas dimensions to match its display size
+    // This is critical for proper cursor position mapping
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    
+    // Initialize signature pad with correct options for cursor alignment
+    const signaturePad = new SignaturePad(canvas, {
+        backgroundColor: 'rgb(255, 255, 255)',
+        penColor: 'rgb(38, 34, 92)',
+        velocityFilterWeight: 0.5,  // Lower for more precise positioning
+        minWidth: 0.8,
+        maxWidth: 2.0,
+        throttle: 0  // No throttling for direct cursor mapping
+    });
+    
+    // Clear button
+    document.getElementById('clear-signature').addEventListener('click', () => {
+        signaturePad.clear();
+    });
+    
+    // Ensure the canvas handles window resize properly
+    window.addEventListener('resize', () => {
+        // Store the existing signature data
+        const data = signaturePad.toData();
+        
+        // Resize the canvas to match its new display size
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        
+        // Clear and restore the signature data if it existed
+        signaturePad.clear();
+        if (data && data.length > 0) {
+            signaturePad.fromData(data);
+        }
+    });
+    
+    return signaturePad;
+}
+
 // Initialize application
 function init() {
     // Make sure all functions are in the global scope
@@ -1980,3 +2089,8 @@ function init() {
         loadDashboard();
     }
 }
+
+// Call init when document is ready
+document.addEventListener('DOMContentLoaded', function() {
+    init();
+});
