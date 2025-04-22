@@ -1,129 +1,109 @@
-<!-- Home.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Document Request System</title>
-  <link rel="stylesheet" href="../css/Home.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Document Request System{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/Home.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Add SignaturePad library -->
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 </head>
 <body>
-
-  <header class="header">
-    <div class="logo-section">
-      <img src="..//images/SBLC Logo.jpg" alt="SBLC Logo" class="logo" />
-      <h1>DOCUMENT REQUEST SYSTEM</h1>
-    </div>
-    <div class="user-info">
-      <span>Guest</span>
-      <span>Not Logged in</span>
-      <button class="logout-btn">Log out</button>
-    </div>
-  </header>
-
-  <!-- Log-in to EDMS -->
-  <main class="main-container">
-    <div class="centered-container">
-      <section class="login-section">
-        <h2>Log-in to Document Request System</h2>
-        <div class="line"></div>
-        <form>
-          <label for="username">Username</label>
-          <input type="text" id="username" name="username" placeholder="Enter username" required />
-        
-          <label for="password">Password</label>
-          <input type="password" id="password" name="password" placeholder="Enter password" required />
-        
-          <a href="DashboardRequestor.html" class="login-btn">Login</a>
-        </form>
-      </section>
-
-  <main class="main-container">
-    <div class="centered-container">
-      <section class="login-section">
-        <h2>Select a Demo Account</h2>
-        <div class="line"></div>
-
-        <div class="login-buttons">
-          <a href="DashboardRequestor.html" class="login-btn">Requestor (john)</a>
-          <a href="DashboardFinance.html" class="login-btn">Finance Approver (jane)</a>
-          <a href="DashboardHR.html" class="login-btn">HR Approver (mike)</a>
-          <a href="DashboardIT.html" class="login-btn">IT Approver (sarah)</a>
-          <a href="DashboardOperations.html" class="login-btn">Operations Approver (david)</a>
-          <a href="DashboardAdmin.html" class="login-btn">Administrator (admin)</a>
+    <header class="header">
+        <div class="logo-section">
+            <img src="{{ url_for('static', filename='images/SBLC Logo.jpg') }}" alt="SBLC Logo" class="logo" />
+            <h1>DOCUMENT REQUEST SYSTEM</h1>
         </div>
-      </section>
-
-    <!-- Welcome to SBLC -->
-      <section class="intro-section">
-        <h2>Welcome to the SBLC Document Request System</h2>
-        <p>
-          This secure web-based platform is designed exclusively for SBLC employees to manage, track, and process internal document requests efficiently. 
-          Whether you're in HR, Finance, IT, Operations, or Administrative roles, this system provides centralized access to important forms and request records.
-          Please log in using your assigned credentials to begin.
-        </p>
-        <br><a href="GetStarted.html" class="cta-btn">Get Started</a>
-      </section>
-
-  <!-- Academics Department Section (visible without JS) -->
-  <div class="academics-department">
-    <h2>Academics Department</h2>
-    <p>Select a department to manage:</p>
-
-    <!-- List of Departments -->
-    <div class="department-list">
-      <button class="department-btn" data-department="nursing">Nursing</button>
-      <button class="department-btn" data-department="psychology">Psychology</button>
-      <button class="department-btn" data-department="education">Education</button>
-      <button class="department-btn" data-department="hospitality-management">Hospitality Management</button>
-      <button class="department-btn" data-department="tourism-management">Tourism Management</button>
-      <button class="department-btn" data-department="senior-highschool">Senior High School</button>
-    </div>
-  </div>
-
-    <!-- Recent Requests -->
-    <section class="table-section">
-      <br><br><h3>Recent Requests</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Request ID</th>
-            <th>Document Type</th>
-            <th>Date Requested</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>REQ001</td>
-            <td>Transcript</td>
-            <td>2025-04-10</td>
-            <td>Pending</td>
-          </tr>
-          <tr>
-            <td>REQ002</td>
-            <td>Certificate</td>
-            <td>2025-04-11</td>
-            <td>Approved</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-   <!-- Footer -->
-  <footer class="footer">
-    <p>© 2025 St. Bernadette of Lourdes College | All Rights Reserved.</p>
-    <p>
-      For support, contact 
-      <a href="mailto:support@sblc.edu.ph">support@sblc.edu.ph</a> 
-      or visit our 
-      <a href="https://www.facebook.com/sblc.inc.official/" target="_blank">SBLC Facebook Page</a>
-    </p>
-  </footer>
-
-
-    <div class="overlay"></div>
+        <div class="user-info">
+            {% if session.user_id %}
+                <span>{{ session.user_name }}</span>
+                <span>{{ session.user_role|capitalize }}{% if session.user_department %} ({{ session.user_department }}){% endif %}</span>
+                <a href="{{ url_for('logout') }}" class="logout-btn">Log out</a>
+            {% else %}
+                <span>Guest</span>
+                <span>Not Logged in</span>
+                <a href="{{ url_for('login') }}" class="logout-btn">Login</a>
+            {% endif %}
+        </div>
+    </header>
     
-  </main>
+    <nav>
+        <div class="container">
+            <div class="nav-links" id="nav-links">
+                <a href="{{ url_for('dashboard') }}" 
+                   class="{{ 'active' if request.endpoint == 'dashboard' }}">Dashboard</a>
+                
+                {% if session.user_role == 'requestor' %}
+                    <a href="{{ url_for('new_request') }}" 
+                       class="{{ 'active' if request.endpoint == 'new_request' }}">New Request</a>
+                    <a href="{{ url_for('my_requests') }}" 
+                       class="{{ 'active' if request.endpoint == 'my_requests' }}">My Requests</a>
+                {% elif session.user_role == 'approver' %}
+                    <a href="{{ url_for('pending_approvals') }}" 
+                       class="{{ 'active' if request.endpoint == 'pending_approvals' }}">Pending Approvals</a>
+                    <a href="{{ url_for('all_requests') }}" 
+                       class="{{ 'active' if request.endpoint == 'all_requests' }}">All Requests</a>
+                {% elif session.user_role == 'admin' %}
+                    <a href="{{ url_for('all_requests') }}" 
+                       class="{{ 'active' if request.endpoint == 'all_requests' }}">All Requests</a>
+                    <a href="{{ url_for('user_management') }}" 
+                       class="{{ 'active' if request.endpoint == 'user_management' }}">User Management</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+    
+    <main>
+        <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    
+    <!-- Modal for various actions -->
+    <div class="modal-bg" id="modal-container">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modal-title">Modal Title</h3>
+                <span class="close-modal" id="close-modal">&times;</span>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Modal content will be loaded here -->
+            </div>
+            <div class="modal-footer" id="modal-footer">
+                <!-- Modal buttons will be added here -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Modal functionality
+        const modal = document.getElementById('modal-container');
+        const closeModal = document.getElementById('close-modal');
+        
+        if (closeModal) {
+            closeModal.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+        }
+        
+        // Close modal when clicking outside
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
 </body>
 </html>
