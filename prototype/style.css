@@ -1,0 +1,840 @@
+/* General Styling with Updated Colors */
+* {
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    background-color: #26225C;
+    color: white;
+    padding: 15px 0;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-role {
+    background-color: rgba(38, 34, 92, 0.7);
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 14px;
+}
+
+button {
+    cursor: pointer;
+    padding: 8px 15px;
+    background-color: #F9C941;
+    color: #26225C;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: background-color 0.2s;
+    font-weight: 600;
+}
+
+button:hover {
+    background-color: #eab62d;
+}
+
+button.secondary {
+    background-color: #dedaff;
+    color: #26225C;
+}
+
+button.secondary:hover {
+    background-color: #cecae8;
+}
+
+button.danger {
+    background-color: #e74c3c;
+    color: white;
+}
+
+button.danger:hover {
+    background-color: #c0392b;
+}
+
+button.success {
+    background-color: #26225C;
+    color: #F9C941;
+}
+
+button.success:hover {
+    background-color: #1e1a4d;
+}
+
+/* Navigation */
+nav {
+    background-color: rgba(38, 34, 92, 0.8);
+    padding: 10px 0;
+}
+
+.nav-links {
+    display: flex;
+    gap: 20px;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.nav-links a:hover, .nav-links a.active {
+    background-color: #F9C941;
+    color: #26225C;
+}
+
+/* Main Content */
+main {
+    padding: 20px 0;
+    min-height: calc(100vh - 180px);
+}
+
+.card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(38, 34, 92, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+h2, h3 {
+    margin: 0;
+    color: #26225C;
+}
+
+/* Table Styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+th {
+    background-color: rgba(249, 201, 65, 0.2);
+    font-weight: 600;
+    color: #26225C;
+}
+
+tr:hover {
+    background-color: rgba(249, 201, 65, 0.1);
+}
+
+/* Status Badges */
+.status {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status.draft {
+    background-color: #dedaff;
+    color: #26225C;
+}
+
+.status.pending {
+    background-color: #F9C941;
+    color: #26225C;
+}
+
+.status.in-review, .status.waiting-for-approval {
+    background-color: #3498db;
+    color: white;
+}
+
+.status.on-hold {
+    background-color: #e67e22;
+    color: white;
+}
+
+.status.approved {
+    background-color: #2ecc71;
+    color: white;
+}
+
+.status.rejected {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.status.completed {
+    background-color: #9b59b6;
+    color: white;
+}
+
+/* Urgency badges */
+.urgency {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-left: 5px;
+}
+
+.urgency.urgent {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.urgency.normal {
+    background-color: #3498db;
+    color: white;
+}
+
+/* Past due date */
+.past-due {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+.actions {
+    display: flex;
+    gap: 5px;
+}
+
+/* Forms */
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #26225C;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.department-approval {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.approval-card {
+    border: 1px solid #ecf0f1;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.approval-card.signed {
+    border-color: #2ecc71;
+    background-color: rgba(46, 204, 113, 0.1);
+}
+
+.sign-info {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #26225C;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ecf0f1;
+    padding-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.tab {
+    padding: 8px 15px;
+    cursor: pointer;
+    border-radius: 4px 4px 0 0;
+    transition: background-color 0.2s;
+}
+
+.tab.active {
+    background-color: #26225C;
+    color: #F9C941;
+}
+
+.tab:hover:not(.active) {
+    background-color: rgba(249, 201, 65, 0.2);
+}
+
+/* Modal */
+.modal-bg {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(38, 34, 92, 0.5);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(38, 34, 92, 0.3);
+    width: 500px;
+    max-width: 90%;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #ecf0f1;
+    background-color: rgba(249, 201, 65, 0.2);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #ecf0f1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.close-modal {
+    cursor: pointer;
+    font-size: 20px;
+    color: #26225C;
+}
+
+/* File Upload */
+.dropzone {
+    border: 2px dashed #F9C941;
+    border-radius: 8px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    margin-bottom: 20px;
+    background-color: rgba(249, 201, 65, 0.1);
+}
+
+.dropzone:hover {
+    border-color: #26225C;
+    background-color: rgba(249, 201, 65, 0.2);
+}
+
+.file-list {
+    list-style: none;
+    padding: 0;
+}
+
+.file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #ecf0f1;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
+
+.file-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.remove-file {
+    padding: 3px 8px;
+    font-size: 12px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header-content, .nav-links {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .department-approval {
+        grid-template-columns: 1fr;
+    }
+    
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    th, td {
+        padding: 8px;
+    }
+    
+    .actions {
+        flex-direction: column;
+    }
+    
+    .tabs {
+        overflow-x: auto;
+        padding-bottom: 5px;
+    }
+    
+    .tab {
+        white-space: nowrap;
+    }
+}
+
+/* Add these CSS styles to style.css to support document signatures */
+
+/* Signature status styles */
+.signature-status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.signature-badge {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.signature-badge.signed {
+    background-color: #2ecc71;
+}
+
+.signature-badge.unsigned {
+    background-color: #f39c12;
+}
+
+.signature-badge.revoked {
+    background-color: #e74c3c;
+}
+
+/* Signature info panel */
+.signature-info {
+    border-left: 3px solid #2ecc71;
+    padding: 10px;
+    margin: 10px 0;
+    background-color: rgba(46, 204, 113, 0.1);
+}
+
+.signature-info.revoked {
+    border-left-color: #e74c3c;
+    background-color: rgba(231, 76, 60, 0.1);
+}
+
+.signature-info .signer {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.signature-info .date {
+    font-size: 12px;
+    color: #7f8c8d;
+}
+
+.signature-info .comments {
+    margin-top: 5px;
+    font-style: italic;
+}
+
+/* Signature panel for digital signature pad */
+.signature-pad-container {
+    margin: 20px 0;
+}
+
+.signature-pad {
+    border: 1px solid #ddd;
+    background-color: #fff;
+    width: 100%;
+    height: 200px;
+    margin-bottom: 10px;
+}
+
+.signature-pad-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Signature verification badge */
+.verification-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 15px;
+    background-color: #2ecc71;
+    color: white;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.verification-badge:before {
+    content: "✓";
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+/* Document list with signature status */
+.document-list {
+    list-style: none;
+    padding: 0;
+}
+
+.document-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border: 1px solid #ecf0f1;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    background-color: white;
+}
+
+.document-item.signed {
+    border-color: #2ecc71;
+    background-color: rgba(46, 204, 113, 0.05);
+}
+
+.document-item.requires-signature {
+    border-color: #f39c12;
+    background-color: rgba(243, 156, 18, 0.05);
+}
+
+.document-info {
+    flex: 1;
+}
+
+.document-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.document-meta {
+    font-size: 12px;
+    color: #7f8c8d;
+}
+
+.document-actions {
+    display: flex;
+    gap: 5px;
+}
+
+/* Signature history section */
+.signature-history {
+    margin-top: 20px;
+    border-top: 1px dashed #ddd;
+    padding-top: 15px;
+}
+
+.signature-history h4 {
+    margin-top: 0;
+    color: #7f8c8d;
+}
+
+.history-item {
+    margin-bottom: 10px;
+    padding-left: 10px;
+    border-left: 2px solid #ddd;
+}
+
+.history-action {
+    font-weight: bold;
+}
+
+.history-date {
+    font-size: 12px;
+    color: #7f8c8d;
+}
+
+.history-user {
+    font-style: italic;
+}
+
+/* Signature verification widget */
+.signature-verification {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 4px;
+    background-color: rgba(46, 204, 113, 0.1);
+}
+
+.verification-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: #2ecc71;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+}
+
+.verification-info {
+    flex: 1;
+}
+
+.verification-status {
+    font-weight: bold;
+    color: #2ecc71;
+}
+
+.verification-timestamp {
+    font-size: 12px;
+    color: #7f8c8d;
+}
+
+/* Add these additional CSS styles for the signature pad */
+
+/* Signature pad canvas */
+.signature-pad-container {
+    margin: 20px 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.signature-pad {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    width: 100%;
+    height: 200px;
+    touch-action: none;
+}
+
+.signature-pad-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    justify-content: flex-end;
+}
+
+/* Signature image display */
+.signature-image-container {
+    margin-top: 15px;
+    padding: 10px;
+    border: 1px solid #ecf0f1;
+    border-radius: 4px;
+    background-color: #fff;
+}
+
+.signature-image-container h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #26225C;
+    font-size: 14px;
+}
+
+.signature-image {
+    max-width: 300px;
+    max-height: 100px;
+    border: 1px solid #ecf0f1;
+    background-color: #fff;
+}
+
+/* Signature confirmation checkbox */
+input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+/* Signature verification badge with digital certificate style */
+.signature-verified-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    background-color: rgba(46, 204, 113, 0.1);
+    border: 1px solid #2ecc71;
+    color: #2ecc71;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.signature-verified-badge:before {
+    content: "✓";
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+    text-align: center;
+    background-color: #2ecc71;
+    color: white;
+    border-radius: 50%;
+}
+
+/* Signature workflow status panel */
+.signature-workflow-status {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    border-left: 4px solid #26225C;
+}
+
+.signature-workflow-status h3 {
+    margin-top: 0;
+    color: #26225C;
+}
+
+.workflow-step {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-left: 10px;
+}
+
+.workflow-step .step-number {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    border-radius: 50%;
+    background-color: #ecf0f1;
+    color: #7f8c8d;
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+.workflow-step.completed .step-number {
+    background-color: #2ecc71;
+    color: white;
+}
+
+.workflow-step.current .step-number {
+    background-color: #3498db;
+    color: white;
+}
+
+.workflow-step.pending .step-number {
+    background-color: #ecf0f1;
+    color: #7f8c8d;
+}
+
+.signature-timestamp {
+    font-style: italic;
+    font-size: 12px;
+    color: #7f8c8d;
+}
+
+/* Audit trail styles */
+.audit-trail {
+    margin-top: 20px;
+    border-top: 1px dashed #ddd;
+    padding-top: 15px;
+}
+
+.audit-trail h3 {
+    color: #26225C;
+}
+
+.audit-entry {
+    margin-bottom: 10px;
+    padding: 10px;
+    border-left: 3px solid #3498db;
+    background-color: rgba(52, 152, 219, 0.05);
+}
+
+.audit-entry.sign-action {
+    border-left-color: #2ecc71;
+    background-color: rgba(46, 204, 113, 0.05);
+}
+
+.audit-entry.revoke-action {
+    border-left-color: #e74c3c;
+    background-color: rgba(231, 76, 60, 0.05);
+}
+
+.audit-timestamp {
+    font-size: 12px;
+    color: #7f8c8d;
+}
+
+.audit-user {
+    font-weight: bold;
+    color: #26225C;
+}
+
+.audit-action {
+    font-weight: bold;
+}
+
+.audit-action.sign {
+    color: #2ecc71;
+}
+
+.audit-action.revoke {
+    color: #e74c3c;
+}
