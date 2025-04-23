@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Document Request System{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/Home.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <!-- Add SignaturePad library -->
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 </head>
 <body>
@@ -33,7 +31,7 @@
             <div class="nav-links" id="nav-links">
                 <a href="{{ url_for('dashboard') }}" 
                    class="{{ 'active' if request.endpoint == 'dashboard' }}">Dashboard</a>
-                
+    
                 {% if session.user_role == 'requestor' %}
                     <a href="{{ url_for('new_request') }}" 
                        class="{{ 'active' if request.endpoint == 'new_request' }}">New Request</a>
@@ -53,7 +51,7 @@
             </div>
         </div>
     </nav>
-    {% endif %}
+    
     
     <main>
         <div class="container">

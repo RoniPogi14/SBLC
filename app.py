@@ -13,8 +13,8 @@ app.secret_key = 'your_secret_key_here'  # Change this to a secure key
 
 # MySQL Configuration
 app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'your_username'
-app.config['MYSQL_PASSWORD'] = 'your_password'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = 'sblc2025'
 app.config['MYSQL_DB'] = 'document_request_system'
 
 # File Upload Configuration

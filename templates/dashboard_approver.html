@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Approver Dashboard - Document Request System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/DashboardAdmin.css') }}" />
+</head>
+
+<body>
+  <!-- Background Logo Layer -->
+  <div class="background-logo-wrapper"></div>
+
+  <!-- Top Header -->
+  <header class="top-header">
+    <div class="title">Document Request System</div>
+    <div class="user-area">
+      <img src="{{ url_for('static', filename='images/John Doe.jpg') }}" alt="Profile Image" />
+      <div>
+        <div class="username">{{ session['user_name'] }}</div>
+        <div class="role">Approver</div>
+      </div>
+      <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+    </div>
+  </header>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <a href="{{ url_for('dashboard') }}" class="nav-btn active">Dashboard</a>
+    <a href="{{ url_for('user_management') }}" class="nav-btn">User Management</a>
+    <a href="#" class="nav-btn">All Requests</a>
+    <a href="{{ url_for('index') }}" class="nav-btn">HOME</a>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="dashboard-card">
+      <h2>Admin Dashboard</h2>
+      <hr />
+      
+      <!-- Request Overview Boxes -->
+      <div class="overview-boxes">
+        <div class="box total">
+          <h1>{{ counts[2] or 0 }}</h1>
+          <p>Total Requests</p>
+        </div>
+        <div class="box pending">
+          <h1>{{ counts[0] or 0 }}</h1>
+          <p>Pending Requests</p>
+        </div>
+        <div class="box approved">
+          <h1>{{ counts[1] or 0 }}</h1>
+          <p>Approved Requests</p>
+        </div>
+      </div>
+
+      <!-- Recent Requests -->
+      <div class="recent-requests">
+        <h2>Recent Requests</h2>
+        <table class="request-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Requester</th>
+              <th>Status</th>
+              <th>Created Date</th>
+              <th>Deadline</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for req in requests %}
+            <tr>
+              <td>{{ req[0] }}</td>
+              <td>
+                {{ req[1] }}
+                {% if req[7] %}<span class="urgent">(Urgent)</span>{% endif %}
+              </td>
+              <td>{{ req[-1] }}</td>
+              <td>
+                <span class="status {{ req[3].lower() }}">
+                  {{ req[3] }}
+                </span>
+              </td>
+              <td>{{ req[5].strftime('%b %d, %Y') }}</td>
+              <td class="deadline">
+                {{ req[6].strftime('%b %d, %Y') if req[6] else '-' }}
+              </td>
+              <td>
+                <a href="{{ url_for('view_request', request_id=req[0]) }}">
+                  <button class="view-btn">View</button>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <a href="#">
+          <button class="view-all-btn">View All Requests</button>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Active Nav Highlight Script -->
+  <script>
+    const links = document.querySelectorAll('.navbar a');
+    const currentPage = window.location.pathname.split("/").pop();
+
+    links.forEach(link => {
+      if (link.getAttribute("href") === currentPage) {
+        link.classList.add("active");
+      } else {
+        link.classList.remove("active");
+      }
+    });
+  </script>
+</body>
+</html>
