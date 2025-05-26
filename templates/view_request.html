@@ -1,0 +1,634 @@
+{% extends "base.html" %}
+
+{% block title %}Request #{{ request[0] }} - {{ request[1] }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Additional styles for view request page */
+.request-container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 1000px;
+    margin: 20px auto;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0c240;
+}
+
+.request-header h1 {
+    color: #1a1054;
+    font-size: 24px;
+    margin: 0;
+}
+
+.request-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.request-details {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    border-left: 4px solid #1a1054;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-label {
+    font-weight: bold;
+    color: #555;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.detail-value {
+    font-size: 16px;
+    color: #333;
+}
+
+.section {
+    margin-bottom: 30px;
+}
+
+.section-title {
+    color: #1a1054;
+    font-size: 20px;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #f0c240;
+}
+
+.description-box {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    line-height: 1.6;
+    border: 1px solid #dee2e6;
+}
+
+.documents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+}
+
+.document-card {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.document-info h4 {
+    margin: 0 0 5px 0;
+    color: #1a1054;
+}
+
+.document-info small {
+    color: #666;
+}
+
+.approval-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 15px;
+}
+
+.approval-card {
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.approval-card.approved {
+    background-color: #d4edda;
+    border-color: #28a745;
+}
+
+.approval-card.pending {
+    background-color: #fff3cd;
+    border-color: #ffc107;
+}
+
+.approval-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.approval-department {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.approval-status {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.approval-status.approved {
+    background-color: #28a745;
+    color: white;
+}
+
+.approval-status.pending {
+    background-color: #ffc107;
+    color: #856404;
+}
+
+.comments-section {
+    margin-top: 30px;
+}
+
+.comment-form {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.comment-item {
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    margin-bottom: 15px;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.comment-author {
+    font-weight: bold;
+    color: #1a1054;
+}
+
+.comment-date {
+    color: #666;
+    font-size: 12px;
+}
+
+.comment-content {
+    line-height: 1.5;
+    color: #333;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+    padding: 20px 30px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f9fa;
+    border-radius: 12px 12px 0 0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #1a1054;
+}
+
+.modal-body {
+    padding: 30px;
+}
+
+.modal-footer {
+    padding: 20px 30px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    background-color: #f8f9fa;
+    border-radius: 0 0 12px 12px;
+}
+
+.signature-container {
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+}
+
+.signature-pad {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+    height: 150px;
+    cursor: crosshair;
+}
+
+.signature-actions {
+    margin-top: 10px;
+}
+
+.close {
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #aaa;
+}
+
+.close:hover {
+    color: #000;
+}
+
+.badge {
+    background-color: #17a2b8;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    margin-left: 10px;
+}
+
+.btn-success { background-color: #28a745; color: white; }
+.btn-success:hover { background-color: #218838; }
+
+.btn-danger { background-color: #dc3545; color: white; }
+.btn-danger:hover { background-color: #c82333; }
+
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+.required { color: #dc3545; }
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .request-container {
+        margin: 10px;
+        padding: 20px;
+    }
+
+    .request-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .documents-grid,
+    .approval-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-content {
+        margin: 10% auto;
+        width: 95%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Request Container -->
+<div class="request-container">
+    <!-- Request Header -->
+    <div class="request-header">
+        <h1>Request #{{ request[0] }}: {{ request[1] }}</h1>
+        <div class="request-actions">
+            {% if session.user_role == 'approver' and request[3] == 'pending' %}
+                <button class="btn btn-success" onclick="showApprovalModal()">
+                    ✓ Approve
+                </button>
+                <button class="btn btn-danger" onclick="showRejectionModal()">
+                    ✗ Reject
+                </button>
+            {% endif %}
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Back</a>
+        </div>
+    </div>
+
+    <!-- Request Details -->
+    <div class="request-details">
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="detail-label">Status</span>
+                <span class="detail-value">
+                    <span class="status {{ request[3].lower() }}">{{ request[3] }}</span>
+                    {% if request[7] %}<span class="urgent"> (URGENT)</span>{% endif %}
+                </span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Created By</span>
+                <span class="detail-value">{{ request[-1] if request|length > 8 else 'Unknown' }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Created Date</span>
+                <span class="detail-value">{{ request[5].strftime('%B %d, %Y at %I:%M %p') if request[5] else 'N/A' }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Deadline</span>
+                <span class="detail-value deadline">
+                    {{ request[6].strftime('%B %d, %Y') if request[6] else 'No deadline set' }}
+                </span>
+            </div>
+            {% if request[4] %}
+            <div class="detail-item">
+                <span class="detail-label">Assigned To</span>
+                <span class="detail-value">{{ request[4] }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Description Section -->
+    <div class="section">
+        <h2 class="section-title">Description</h2>
+        <div class="description-box">
+            {% if request[2] %}
+                {{ request[2]|replace('\n', '<br>')|safe }}
+            {% else %}
+                <em>No description provided.</em>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Documents Section -->
+    {% if documents %}
+    <div class="section">
+        <h2 class="section-title">Documents ({{ documents|length }})</h2>
+        <div class="documents-grid">
+            {% for doc in documents %}
+            <div class="document-card">
+                <div class="document-info">
+                    <h4>{{ doc[2] }}</h4>
+                    <small>Uploaded: {{ doc[4].strftime('%b %d, %Y at %I:%M %p') if doc[4] else 'Unknown' }}</small>
+                    {% if doc[5] %}<span class="badge">Initial</span>{% endif %}
+                </div>
+                <div class="document-actions">
+                    <a href="{{ url_for('download_document', doc_id=doc[0]) }}" class="btn btn-sm btn-primary">📥 Download</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Approvals Section -->
+    <div class="section">
+        <h2 class="section-title">Approvals</h2>
+        {% if approvals %}
+        <div class="approval-grid">
+            {% for approval in approvals %}
+            <div class="approval-card {{ 'approved' if approval[2] else 'pending' }}">
+                <div class="approval-header">
+                    <span class="approval-department">{{ approval[1] }}</span>
+                    <span class="approval-status {{ 'approved' if approval[2] else 'pending' }}">
+                        {% if approval[2] %}✅ APPROVED{% else %}⏳ PENDING{% endif %}
+                    </span>
+                </div>
+                {% if approval[2] %}
+                <div class="approval-details">
+                    <p><strong>Approved by:</strong> {{ approval[-1] if approval[-1] else 'Unknown' }}</p>
+                    <p><strong>Date:</strong> {{ approval[4].strftime('%B %d, %Y at %I:%M %p') if approval[4] else 'Unknown' }}</p>
+                    {% if approval[5] %}
+                    <p><strong>Comments:</strong></p>
+                    <p>{{ approval[5] }}</p>
+                    {% endif %}
+                </div>
+                {% else %}
+                <p><em>Waiting for approval from {{ approval[1] }} department.</em></p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p><em>No approvals required or recorded yet.</em></p>
+        {% endif %}
+    </div>
+
+    <!-- Comments Section -->
+    <div class="section comments-section">
+        <h2 class="section-title">Comments</h2>
+        
+        <!-- Add Comment Form -->
+        <div class="comment-form">
+            <h4>Add a Comment</h4>
+            <form method="POST" action="{{ url_for('view_request', request_id=request[0]) }}">
+                <div class="form-group">
+                    <textarea name="comment" class="form-control" placeholder="Type your comment here..." required></textarea>
+                </div>
+                <button type="submit" name="action" value="add_comment" class="btn btn-primary">💬 Add Comment</button>
+            </form>
+        </div>
+
+        <!-- Comments List -->
+        {% if comments %}
+            {% for comment in comments %}
+            <div class="comment-item">
+                <div class="comment-header">
+                    <div>
+                        <span class="comment-author">{{ comment[4] if comment|length > 4 else 'Unknown User' }}</span>
+                        {% if comment|length > 5 %}
+                        <span class="comment-department">({{ comment[5] }})</span>
+                        {% endif %}
+                    </div>
+                    <span class="comment-date">{{ comment[3].strftime('%b %d, %Y at %I:%M %p') if comment[3] else 'Unknown date' }}</span>
+                </div>
+                <div class="comment-content">
+                    {{ comment[1]|replace('\n', '<br>')|safe if comment[1] else 'No content' }}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <p><em>No comments yet. Be the first to comment!</em></p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Approval Modal -->
+{% if session.user_role == 'approver' and request[3] == 'pending' %}
+<div id="approvalModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Approve Request #{{ request[0] }}</h3>
+            <span class="close" onclick="closeModal('approvalModal')">&times;</span>
+        </div>
+        <form method="POST" action="{{ url_for('approve_request', request_id=request[0]) }}">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="approvalComment">Comments (Optional)</label>
+                    <textarea id="approvalComment" name="comment" class="form-control" 
+                              placeholder="Add any comments about this approval..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Digital Signature <span class="required">*</span></label>
+                    <div class="signature-container">
+                        <p><small>Please sign below to approve this request:</small></p>
+                        <canvas id="signaturePad" class="signature-pad"></canvas>
+                        <input type="hidden" name="signature" id="signatureData">
+                        <div class="signature-actions">
+                            <button type="button" onclick="clearSignature()" class="btn btn-sm btn-secondary">🗑️ Clear</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeModal('approvalModal')" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-success">✅ Approve Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Rejection Modal -->
+<div id="rejectionModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Reject Request #{{ request[0] }}</h3>
+            <span class="close" onclick="closeModal('rejectionModal')">&times;</span>
+        </div>
+        <form method="POST" action="{{ url_for('reject_request', request_id=request[0]) }}">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="rejectionComment">Reason for Rejection <span class="required">*</span></label>
+                    <textarea id="rejectionComment" name="comment" class="form-control" 
+                              placeholder="Please provide a clear reason for rejecting this request..." required></textarea>
+                </div>
+                <p><small><strong>Note:</strong> This action cannot be undone. The requestor will be notified of the rejection.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeModal('rejectionModal')" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-danger">❌ Reject Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let signaturePad;
+
+    function showApprovalModal() {
+        document.getElementById('approvalModal').style.display = 'block';
+        // Initialize signature pad after modal is shown
+        setTimeout(initSignaturePad, 100);
+    }
+
+    function showRejectionModal() {
+        document.getElementById('rejectionModal').style.display = 'block';
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    function initSignaturePad() {
+        const canvas = document.getElementById('signaturePad');
+        if (canvas && typeof SignaturePad !== 'undefined') {
+            signaturePad = new SignaturePad(canvas, {
+                backgroundColor: 'rgba(255, 255, 255, 0)',
+                penColor: 'rgb(0, 0, 0)'
+            });
+            
+            // Resize canvas to fit container
+            function resizeCanvas() {
+                const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                canvas.width = canvas.offsetWidth * ratio;
+                canvas.height = canvas.offsetHeight * ratio;
+                canvas.getContext("2d").scale(ratio, ratio);
+                signaturePad.clear();
+            }
+            
+            window.addEventListener("resize", resizeCanvas);
+            resizeCanvas();
+        }
+    }
+
+    function clearSignature() {
+        if (signaturePad) {
+            signaturePad.clear();
+        }
+    }
+
+    // Handle approval form submission
+    document.querySelector('#approvalModal form')?.addEventListener('submit', function(e) {
+        if (signaturePad && !signaturePad.isEmpty()) {
+            document.getElementById('signatureData').value = signaturePad.toDataURL();
+        } else {
+            e.preventDefault();
+            alert('Please provide a digital signature before approving the request.');
+            return false;
+        }
+    });
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const approvalModal = document.getElementById('approvalModal');
+        const rejectionModal = document.getElementById('rejectionModal');
+        
+        if (event.target === approvalModal) {
+            closeModal('approvalModal');
+        }
+        if (event.target === rejectionModal) {
+            closeModal('rejectionModal');
+        }
+    }
+
+    // Auto-resize textareas
+    document.querySelectorAll('textarea').forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+</script>
+{% endblock %}

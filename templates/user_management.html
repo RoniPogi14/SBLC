@@ -1,0 +1,418 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - Document Request System{% endblock %}
+
+{% block content %}
+<div class="dashboard-card">
+    <h2>User Management</h2>
+    <hr />
+    
+    <!-- Department Overview -->
+    <div class="overview-boxes">
+        <div class="box total">
+            <h1>{{ user_count or 0 }}</h1>
+            <p>Total Users</p>
+        </div>
+        <div class="box approved">
+            <h1>{{ department_count or 5 }}</h1>
+            <p>Departments</p>
+        </div>
+        <div class="box info">
+            <h1>{{ approver_count or 0 }}</h1>
+            <p>Approvers</p>
+        </div>
+    </div>
+
+    <!-- Create New User Section -->
+    <div class="form-wrapper" style="margin: 20px 0;">
+        <h2>Create New User</h2>
+        <form method="POST" action="{{ url_for('create_user') }}" class="user-form">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label for="username">Username <span>*</span></label>
+                    <input type="text" id="username" name="username" class="form-control" 
+                           placeholder="e.g., john.doe" required />
+                </div>
+                
+                <div class="form-group">
+                    <label for="name">Full Name <span>*</span></label>
+                    <input type="text" id="name" name="name" class="form-control" 
+                           placeholder="e.g., John Doe" required />
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" class="form-control" 
+                           placeholder="user@sblc.edu.ph" />
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password <span>*</span></label>
+                    <input type="password" id="password" name="password" class="form-control" 
+                           placeholder="Enter password" required />
+                </div>
+                
+                <div class="form-group">
+                    <label for="role">Role <span>*</span></label>
+                    <select id="role" name="role" class="form-control" required onchange="toggleDepartment()">
+                        <option value="">Select Role</option>
+                        <option value="requestor">Requestor</option>
+                        <option value="approver">Approver</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="departmentGroup">
+                    <label for="department">Department</label>
+                    <select id="department" name="department" class="form-control">
+                        <option value="">Select Department</option>
+                        <option value="IT">IT</option>
+                        <option value="DEAN">DEAN</option>
+                        <option value="ADMIN">ADMIN</option>
+                        <option value="Accounting">Accounting</option>
+                        <option value="HR">HR</option>
+                    </select>
+                    <small class="form-help">Required for Requestors and Approvers</small>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button type="submit" class="btn btn-primary">➕ Create User</button>
+                <button type="reset" class="btn btn-secondary">Clear Form</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Existing Users Table -->
+    <div class="recent-requests">
+        <h2>All Users</h2>
+        
+        <!-- Department Filter Tabs -->
+        <div class="tabs">
+            <button class="tab active" data-filter="all">All Users</button>
+            <button class="tab" data-filter="IT">IT</button>
+            <button class="tab" data-filter="DEAN">DEAN</button>
+            <button class="tab" data-filter="ADMIN">ADMIN</button>
+            <button class="tab" data-filter="Accounting">Accounting</button>
+            <button class="tab" data-filter="HR">HR</button>
+            <button class="tab" data-filter="no-dept">No Department</button>
+        </div>
+
+        <table class="request-table" id="usersTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Full Name</th>
+                    <th>Role</th>
+                    <th>Department</th>
+                    <th>Email</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr data-department="{{ user.department or 'no-dept' }}">
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.name }}</td>
+                    <td>
+                        <span class="status {{ user.role }}">
+                            {{ user.role|title }}
+                        </span>
+                    </td>
+                    <td>{{ user.department or '-' }}</td>
+                    <td>{{ user.email or '-' }}</td>
+                    <td>{{ user.created_at.strftime('%b %d, %Y') if user.created_at else '-' }}</td>
+                    <td>
+                        <button class="view-btn" onclick="editUser({{ user.id }})">Edit</button>
+                        {% if user.id != session.user_id %}
+                            <button class="reject-btn" onclick="deleteUser({{ user.id }}, '{{ user.username }}')">Delete</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if not users %}
+        <div class="no-requests">
+            <p>No users found in the system.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Department Approvers Management -->
+    <div class="recent-requests" style="margin-top: 40px;">
+        <h2>Department Approvers</h2>
+        <p style="color: #666; margin-bottom: 20px;">
+            Each department should have at least one approver. Approvers can review and approve requests assigned to their department.
+        </p>
+
+        <div class="overview-boxes">
+            {% for dept in ['IT', 'DEAN', 'ADMIN', 'Accounting', 'HR'] %}
+            <div class="box info" style="min-width: 150px;">
+                <h1 id="count-{{ dept }}">0</h1>
+                <p>{{ dept }}</p>
+                <small>Approvers</small>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div id="editModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Edit User</h3>
+            <span class="close" onclick="closeEditModal()">&times;</span>
+        </div>
+        <form method="POST" action="{{ url_for('update_user') }}" id="editUserForm">
+            <input type="hidden" name="user_id" id="edit_user_id">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit_name">Full Name <span>*</span></label>
+                    <input type="text" id="edit_name" name="name" class="form-control" required />
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit_email">Email</label>
+                    <input type="email" id="edit_email" name="email" class="form-control" />
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit_role">Role <span>*</span></label>
+                    <select id="edit_role" name="role" class="form-control" required onchange="toggleEditDepartment()">
+                        <option value="requestor">Requestor</option>
+                        <option value="approver">Approver</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="editDepartmentGroup">
+                    <label for="edit_department">Department</label>
+                    <select id="edit_department" name="department" class="form-control">
+                        <option value="">Select Department</option>
+                        <option value="IT">IT</option>
+                        <option value="DEAN">DEAN</option>
+                        <option value="ADMIN">ADMIN</option>
+                        <option value="Accounting">Accounting</option>
+                        <option value="HR">HR</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit_password">New Password (leave blank to keep current)</label>
+                    <input type="password" id="edit_password" name="password" class="form-control" 
+                           placeholder="Enter new password if changing" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="closeEditModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+/* Additional styles for user management */
+.status.requestor {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.status.approver {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.status.admin {
+    background-color: #fce4ec;
+    color: #c2185b;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+    padding: 20px 30px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f9fa;
+    border-radius: 12px 12px 0 0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #1a1054;
+}
+
+.modal-body {
+    padding: 30px;
+}
+
+.modal-footer {
+    padding: 20px 30px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    background-color: #f8f9fa;
+    border-radius: 0 0 12px 12px;
+}
+
+.close {
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #aaa;
+}
+
+.close:hover {
+    color: #000;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Toggle department field based on role selection
+function toggleDepartment() {
+    const role = document.getElementById('role').value;
+    const deptGroup = document.getElementById('departmentGroup');
+    
+    if (role === 'admin') {
+        deptGroup.style.display = 'none';
+        document.getElementById('department').value = '';
+    } else {
+        deptGroup.style.display = 'block';
+    }
+}
+
+function toggleEditDepartment() {
+    const role = document.getElementById('edit_role').value;
+    const deptGroup = document.getElementById('editDepartmentGroup');
+    
+    if (role === 'admin') {
+        deptGroup.style.display = 'none';
+        document.getElementById('edit_department').value = '';
+    } else {
+        deptGroup.style.display = 'block';
+    }
+}
+
+// Department filter functionality
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        
+        const filter = this.dataset.filter;
+        const rows = document.querySelectorAll('#usersTable tbody tr');
+        
+        rows.forEach(row => {
+            if (filter === 'all') {
+                row.style.display = '';
+            } else {
+                row.style.display = row.dataset.department === filter ? '' : 'none';
+            }
+        });
+    });
+});
+
+// Count approvers per department
+function countApprovers() {
+    const departments = ['IT', 'DEAN', 'ADMIN', 'Accounting', 'HR'];
+    departments.forEach(dept => {
+        const count = document.querySelectorAll(`tr[data-department="${dept}"] .status.approver`).length;
+        const countEl = document.getElementById(`count-${dept}`);
+        if (countEl) {
+            countEl.textContent = count;
+        }
+    });
+}
+
+// Edit user function
+function editUser(userId) {
+    // Fetch user data via AJAX
+    fetch(`/admin/users/${userId}/details`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('Error loading user data');
+                return;
+            }
+            
+            // Populate the form with user data
+            document.getElementById('edit_user_id').value = data.id;
+            document.getElementById('edit_name').value = data.name || '';
+            document.getElementById('edit_email').value = data.email || '';
+            document.getElementById('edit_role').value = data.role;
+            document.getElementById('edit_department').value = data.department || '';
+            
+            // Show/hide department field based on role
+            toggleEditDepartment();
+            
+            // Show the modal
+            document.getElementById('editModal').style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading user data');
+        });
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+// Delete user function
+function deleteUser(userId, username) {
+    if (confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {
+        // Create a form and submit it
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/users/${userId}/delete`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('editModal');
+    if (event.target === modal) {
+        closeEditModal();
+    }
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleDepartment();
+    countApprovers();
+});
+</script>
+{% endblock %}

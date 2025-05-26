@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}{{ session.user_role|title }} Dashboard - Document Request System{% endblock %}
+
+{% block content %}
+<div class="dashboard-card">
+    <h2>{{ session.user_role|title }} Dashboard</h2>
+    <hr />
+    
+    <!-- Role-specific overview boxes -->
+    {% if session.user_role == 'requestor' %}
+        <div class="overview-boxes">
+            <div class="box draft">
+                <h1>{{ counts[0] or 0 }}</h1>
+                <p>Draft Requests</p>
+            </div>
+            <div class="box pending">
+                <h1>{{ counts[1] or 0 }}</h1>
+                <p>Pending Requests</p>
+            </div>
+            <div class="box approved">
+                <h1>{{ counts[2] or 0 }}</h1>
+                <p>Approved Requests</p>
+            </div>
+        </div>
+        
+    {% elif session.user_role == 'approver' %}
+        <div class="overview-boxes">
+            <div class="box pending">
+                <h1>{{ pending_count or 0 }}</h1>
+                <p>Pending Approvals</p>
+                <small>for {{ session.user_department }}</small>
+            </div>
+            <div class="box info">
+                <h1>{{ session.user_department }}</h1>
+                <p>Your Department</p>
+            </div>
+        </div>
+        
+    {% elif session.user_role == 'admin' %}
+        <div class="overview-boxes">
+            <div class="box total">
+                <h1>{{ counts[2] or 0 }}</h1>
+                <p>Total Requests</p>
+            </div>
+            <div class="box pending">
+                <h1>{{ counts[0] or 0 }}</h1>
+                <p>Pending Requests</p>
+            </div>
+            <div class="box approved">
+                <h1>{{ counts[1] or 0 }}</h1>
+                <p>Approved Requests</p>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Dynamic Recent Requests Section -->
+    <div class="recent-requests">
+        {% if session.user_role == 'requestor' %}
+            <h2>My Recent Requests</h2>
+        {% elif session.user_role == 'approver' %}
+            <h2>Pending Approvals for {{ session.user_department }}</h2>
+        {% elif session.user_role == 'admin' %}
+            <h2>All Recent Requests</h2>
+        {% endif %}
+
+        {% if requests %}
+            <table class="request-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        {% if session.user_role != 'requestor' %}<th>Requester</th>{% endif %}
+                        <th>Status</th>
+                        <th>Created Date</th>
+                        <th>Deadline</th>
+                        {% if session.user_role == 'requestor' %}<th>Assigned To</th>{% endif %}
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                    <tr>
+                        <td>{{ req[0] }}</td>
+                        <td>
+                            {{ req[1] }}
+                            {% if req[7] %}<span class="urgent">(Urgent)</span>{% endif %}
+                        </td>
+                        {% if session.user_role != 'requestor' %}
+                            <td>{{ req[-1] if req|length > 8 else 'N/A' }}</td>
+                        {% endif %}
+                        <td>
+                            <span class="status {{ req[3].lower() }}">
+                                {{ req[3] }}
+                            </span>
+                        </td>
+                        <td>{{ req[5].strftime('%b %d, %Y') if req[5] else 'N/A' }}</td>
+                        <td class="deadline">
+                            {{ req[6].strftime('%b %d, %Y') if req[6] else '-' }}
+                        </td>
+                        {% if session.user_role == 'requestor' %}
+                            <td>{{ req[4] or '-' }}</td>
+                        {% endif %}
+                        <td>
+                            <a href="{{ url_for('view_request', request_id=req[0]) }}">
+                                <button class="view-btn">View</button>
+                            </a>
+                            {% if session.user_role == 'approver' and req[3] == 'pending' %}
+                                <button class="approve-btn" onclick="approveRequest({{ req[0] }})">Approve</button>
+                                <button class="reject-btn" onclick="rejectRequest({{ req[0] }})">Reject</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="no-requests">
+                {% if session.user_role == 'requestor' %}
+                    <p>You haven't made any requests yet.</p>
+                    <a href="{{ url_for('new_request') }}">
+                        <button class="cta-btn">Create Your First Request</button>
+                    </a>
+                {% elif session.user_role == 'approver' %}
+                    <p>No pending approvals for {{ session.user_department }} department.</p>
+                {% elif session.user_role == 'admin' %}
+                    <p>No requests in the system yet.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <!-- Role-specific action buttons -->
+        {% if session.user_role == 'requestor' %}
+            <div class="action-buttons">
+                <a href="{{ url_for('new_request') }}">
+                    <button class="new-request-btn">New Request</button>
+                </a>
+                <a href="{{ url_for('my_requests') }}">
+                    <button class="view-all-btn">View All My Requests</button>
+                </a>
+            </div>
+        {% elif session.user_role == 'approver' %}
+            <div class="action-buttons">
+                <a href="{{ url_for('pending_approvals') }}">
+                    <button class="view-all-btn">View All Pending Approvals</button>
+                </a>
+            </div>
+        {% elif session.user_role == 'admin' %}
+            <div class="action-buttons">
+                <a href="{{ url_for('all_requests') }}">
+                    <button class="view-all-btn">View All Requests</button>
+                </a>
+                <a href="{{ url_for('user_management') }}">
+                    <button class="manage-btn">Manage Users</button>
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Approval functions for dashboard
+function approveRequest(requestId) {
+    if (confirm('Are you sure you want to approve this request?')) {
+        window.location.href = `/requests/${requestId}/approve`;
+    }
+}
+
+function rejectRequest(requestId) {
+    const reason = prompt('Please provide a reason for rejection:');
+    if (reason) {
+        window.location.href = `/requests/${requestId}/reject?reason=${encodeURIComponent(reason)}`;
+    }
+}
+</script>
+{% endblock %}

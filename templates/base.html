@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Document Request System{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/unified.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Background Logo Layer -->
+    <div class="background-logo-wrapper"></div>
+
+    <!-- Top Header -->
+    <header class="top-header">
+        <div class="title">Document Request System</div>
+        <div class="user-area">
+            <div>
+                <div class="username">{{ session.user_name }}</div>
+                <div class="role">{{ session.user_role|title }}{% if session.user_department %} ({{ session.user_department }}){% endif %}</div>
+            </div>
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    <!-- Dynamic Navigation Bar -->
+    <nav class="navbar">
+        <a href="{{ url_for('dashboard') }}" 
+           class="nav-btn {{ 'active' if request.endpoint == 'dashboard' }}">Dashboard</a>
+
+        {% if session.user_role == 'requestor' %}
+            <a href="{{ url_for('new_request') }}" 
+               class="nav-btn {{ 'active' if request.endpoint == 'new_request' }}">New Request</a>
+            <a href="{{ url_for('my_requests') }}" 
+               class="nav-btn {{ 'active' if request.endpoint == 'my_requests' }}">My Requests</a>
+               
+        {% elif session.user_role == 'approver' %}
+            <a href="{{ url_for('pending_approvals') }}" 
+               class="nav-btn {{ 'active' if request.endpoint == 'pending_approvals' }}">Pending Approvals</a>
+            <a href="{{ url_for('all_requests') }}" 
+               class="nav-btn {{ 'active' if request.endpoint == 'all_requests' }}">All Requests</a>
+               
+        {% elif session.user_role == 'admin' %}
+            <a href="{{ url_for('all_requests') }}" 
+               class="nav-btn {{ 'active' if request.endpoint == 'all_requests' }}">All Requests</a>
+            <a href="{{ url_for('user_management') }}" 
+               class="nav-btn {{ 'active' if request.endpoint == 'user_management' }}">User Management</a>
+        {% endif %}
+        
+    </nav>
+
+    <!-- Flash Messages -->
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

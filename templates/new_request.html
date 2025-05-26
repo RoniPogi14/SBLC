@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}New Request - Document Request System{% endblock %}
+
+{% block content %}
+<div class="form-wrapper">
+    <h2>Create New Request</h2>
+    
+    <form method="POST" enctype="multipart/form-data" class="request-form">
+        <div class="form-group">
+            <label for="title">Request Title <span>*</span></label>
+            <input type="text" id="title" name="title" class="form-control" 
+                   placeholder="Enter request title" required />
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description <span>*</span></label>
+            <textarea id="description" name="description" class="form-control" 
+                      placeholder="Enter detailed description of your request" required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="assigned_to">Assign To Department <span>*</span></label>
+            <select id="assigned_to" name="assigned_to" class="form-control" required>
+                <option value="">Select Department</option>
+                {% for dept in departments %}
+                    <option value="{{ dept }}">{{ dept }}</option>
+                {% endfor %}
+                <option value="All Departments">All Departments</option>
+            </select>
+            <small class="form-help">Choose which department should handle this request.</small>
+        </div>
+
+        <div class="form-group">
+            <label for="deadline">Deadline <span>*</span></label>
+            <input type="date" id="deadline" name="deadline" class="form-control" required />
+            <small class="form-help">Please set a deadline for when this request needs to be processed.</small>
+        </div>
+
+        <div class="form-group">
+            <div class="checkbox-group">
+                <input type="checkbox" id="urgent" name="urgent" />
+                <label for="urgent">Mark as Urgent</label>
+            </div>
+            <small class="form-help">Check this if the request needs immediate attention.</small>
+        </div>
+
+        <div class="form-group">
+            <label for="files">Initial Documents (Optional)</label>
+            <input type="file" id="files" name="files" class="form-control" multiple 
+                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" />
+            <small class="form-help">Upload any supporting documents for your request. Accepted formats: PDF, DOC, DOCX, JPG, PNG</small>
+        </div>
+
+        <div class="button-group">
+            <button type="submit" name="status" value="draft" class="btn btn-secondary">
+                Save as Draft
+            </button>
+            <button type="submit" name="status" value="pending" class="btn btn-primary">
+                Submit Request
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Set minimum date to today
+    document.getElementById('deadline').min = new Date().toISOString().split('T')[0];
+    
+    // Form validation
+    document.querySelector('.request-form').addEventListener('submit', function(e) {
+        const deadline = new Date(document.getElementById('deadline').value);
+        const today = new Date();
+        
+        if (deadline < today) {
+            e.preventDefault();
+            alert('Deadline cannot be in the past.');
+            return false;
+        }
+        
+        // Show loading state
+        const submitBtns = document.querySelectorAll('button[type="submit"]');
+        submitBtns.forEach(btn => {
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
+        });
+    });
+</script>
+{% endblock %}
