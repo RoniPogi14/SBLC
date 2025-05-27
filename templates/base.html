@@ -30,16 +30,20 @@
            class="nav-btn {{ 'active' if request.endpoint == 'dashboard' }}">Dashboard</a>
 
         {% if session.user_role == 'requestor' %}
-            <a href="{{ url_for('new_request') }}" 
-               class="nav-btn {{ 'active' if request.endpoint == 'new_request' }}">New Request</a>
-            <a href="{{ url_for('my_requests') }}" 
-               class="nav-btn {{ 'active' if request.endpoint == 'my_requests' }}">My Requests</a>
-               
-        {% elif session.user_role == 'approver' %}
-            <a href="{{ url_for('pending_approvals') }}" 
-               class="nav-btn {{ 'active' if request.endpoint == 'pending_approvals' }}">Pending Approvals</a>
-            <a href="{{ url_for('all_requests') }}" 
-               class="nav-btn {{ 'active' if request.endpoint == 'all_requests' }}">All Requests</a>
+        <a href="{{ url_for('new_request') }}" 
+           class="nav-btn {{ 'active' if request.endpoint == 'new_request' }}">New Request</a>
+        <a href="{{ url_for('my_requests') }}" 
+           class="nav-btn {{ 'active' if request.endpoint == 'my_requests' }}">My Requests</a>
+           
+    {% elif session.user_role == 'approver' %}
+        <a href="{{ url_for('new_request') }}" 
+           class="nav-btn {{ 'active' if request.endpoint == 'new_request' }}">New Request</a>
+        <a href="{{ url_for('my_requests') }}" 
+           class="nav-btn {{ 'active' if request.endpoint == 'my_requests' }}">My Requests</a>
+        <a href="{{ url_for('pending_approvals') }}" 
+           class="nav-btn {{ 'active' if request.endpoint == 'pending_approvals' }}">Pending Approvals</a>
+        <a href="{{ url_for('all_requests') }}" 
+           class="nav-btn {{ 'active' if request.endpoint == 'all_requests' }}">All Requests</a>
                
         {% elif session.user_role == 'admin' %}
             <a href="{{ url_for('all_requests') }}" 

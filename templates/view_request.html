@@ -904,8 +904,13 @@
         <h1>Request #{{ request[0] }}: {{ request[1] }}</h1>
         <div class="header-actions">
             <a href="{{ url_for('dashboard') }}" class="back-btn">← Back</a>
+            {% if can_edit %}
+            <a href="{{ url_for('edit_request', request_id=request[0]) }}" class="edit-btn">
+                ✏️ Edit Request
+            </a>
+            {% endif %}
             {% if session.user_role in ['requestor', 'approver', 'admin'] %}
-            <a href="{{ url_for('create_request') if 'create_request' in view_functions else '#' }}" class="new-request-btn">
+            <a href="{{ url_for('new_request') }}" class="new-request-btn">
                 ➕ New Request
             </a>
             {% endif %}

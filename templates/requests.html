@@ -11,7 +11,13 @@
 <div class="request-container">
     <div class="section-header">
         {% if page_type == 'my_requests' %}
-            <h2>My Requests</h2>
+            <h2>My Requests
+                {% if session.user_role == 'approver' %}
+                    <small style="font-size: 14px; color: #666; font-weight: normal;">
+                        (Requests I Created)
+                    </small>
+                {% endif %}
+            </h2>
             <a href="{{ url_for('new_request') }}">
                 <button class="new-request-btn">New Request</button>
             </a>

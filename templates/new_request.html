@@ -20,15 +20,23 @@
         </div>
 
         <div class="form-group">
-            <label for="assigned_to">Assign To Department <span>*</span></label>
-            <select id="assigned_to" name="assigned_to" class="form-control" required>
-                <option value="">Select Department</option>
+            <label>Assign To Departments <span>*</span></label>
+            <div class="department-checklist">
                 {% for dept in departments %}
-                    <option value="{{ dept }}">{{ dept }}</option>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="dept_{{ loop.index }}" name="assigned_to" value="{{ dept }}" />
+                    <label for="dept_{{ loop.index }}">{{ dept }}</label>
+                </div>
                 {% endfor %}
-                <option value="All Departments">All Departments</option>
-            </select>
-            <small class="form-help">Choose which department should handle this request.</small>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="dept_all" name="assigned_to" value="All Departments" />
+                    <label for="dept_all">All Departments</label>
+                </div>
+            </div>
+            <small class="form-help">Select which departments should handle this request. You can choose multiple departments.</small>
+            <div id="department-error" class="validation-error" style="display: none;">
+                Please select at least one department.
+            </div>
         </div>
 
         <div class="form-group">
@@ -62,12 +70,104 @@
         </div>
     </form>
 </div>
+
+<style>
+.department-checklist {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    margin-top: 5px;
+}
+
+.department-checklist .checkbox-group {
+    margin-bottom: 10px;
+    padding: 5px 0;
+}
+
+.department-checklist .checkbox-group:last-child {
+    margin-bottom: 0;
+}
+
+.department-checklist input[type="checkbox"] {
+    margin-right: 10px;
+    transform: scale(1.2);
+}
+
+.department-checklist label {
+    font-weight: 500;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.department-checklist label:hover {
+    background-color: #e9ecef;
+}
+
+.validation-error {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+    padding: 5px 10px;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+}
+
+/* "All Departments" styling */
+.department-checklist .checkbox-group:last-child {
+    border-top: 1px solid #dee2e6;
+    margin-top: 15px;
+    padding-top: 15px;
+}
+
+.department-checklist .checkbox-group:last-child label {
+    font-weight: bold;
+    color: #1a1054;
+}
+</style>
 {% endblock %}
 
 {% block scripts %}
 <script>
     // Set minimum date to today
     document.getElementById('deadline').min = new Date().toISOString().split('T')[0];
+    
+    // Handle "All Departments" checkbox
+    const allDeptCheckbox = document.getElementById('dept_all');
+    const individualDeptCheckboxes = document.querySelectorAll('input[name="assigned_to"]:not(#dept_all)');
+    
+    allDeptCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            individualDeptCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.disabled = true;
+            });
+        } else {
+            individualDeptCheckboxes.forEach(checkbox => {
+                checkbox.disabled = false;
+            });
+        }
+        clearValidationError();
+    });
+    
+    individualDeptCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            if (this.checked && allDeptCheckbox.checked) {
+                allDeptCheckbox.checked = false;
+                individualDeptCheckboxes.forEach(cb => {
+                    cb.disabled = false;
+                });
+            }
+            clearValidationError();
+        });
+    });
+    
+    function clearValidationError() {
+        document.getElementById('department-error').style.display = 'none';
+    }
     
     // Form validation
     document.querySelector('.request-form').addEventListener('submit', function(e) {
@@ -77,6 +177,15 @@
         if (deadline < today) {
             e.preventDefault();
             alert('Deadline cannot be in the past.');
+            return false;
+        }
+        
+        // Check if at least one department is selected
+        const selectedDepartments = document.querySelectorAll('input[name="assigned_to"]:checked');
+        if (selectedDepartments.length === 0) {
+            e.preventDefault();
+            document.getElementById('department-error').style.display = 'block';
+            document.querySelector('.department-checklist').scrollIntoView({ behavior: 'smooth' });
             return false;
         }
         

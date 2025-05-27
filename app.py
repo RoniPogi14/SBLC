@@ -39,8 +39,20 @@ DEPARTMENT_HIERARCHY = {
 APPROVAL_ORDER = ['HR', 'DEAN', 'Accounting', 'IT']
 
 def get_next_approval_level(request_id):
-    """Get the next department that needs to approve based on hierarchy"""
+    """Get the next department that needs to approve based on assigned departments and hierarchy"""
     cursor = mysql.connection.cursor()
+    
+    # Get the assigned departments for this request
+    cursor.execute("SELECT assigned_to FROM requests WHERE id = %s", (request_id,))
+    request_info = cursor.fetchone()
+    if not request_info:
+        return None
+    
+    assigned_departments = request_info['assigned_to'].split(',') if request_info['assigned_to'] else []
+    
+    # If "All Departments" is assigned, use the full hierarchy
+    if 'All Departments' in assigned_departments:
+        assigned_departments = APPROVAL_ORDER
     
     # Get all approvals for this request
     cursor.execute("""
@@ -51,17 +63,39 @@ def get_next_approval_level(request_id):
     approved_depts = [row['department'] for row in cursor.fetchall()]
     cursor.close()
     
-    # Find the next department in hierarchy that hasn't approved
+    # Find the next department in hierarchy that hasn't approved and is assigned
     for dept in APPROVAL_ORDER:
-        if dept not in approved_depts:
+        if dept in assigned_departments and dept not in approved_depts:
             return dept
     
-    return None  # All departments have approved
+    return None  # All assigned departments have approved
 
 def can_approve_request(request_id, user_department):
-    """Check if the user's department can approve this request based on hierarchy"""
+    """Check if the user's department can approve this request based on assigned departments and hierarchy"""
     if user_department not in DEPARTMENT_HIERARCHY:
         return False, "Department not in approval hierarchy"
+    
+    cursor = mysql.connection.cursor()
+    
+    # Get the assigned departments for this request
+    cursor.execute("SELECT assigned_to FROM requests WHERE id = %s", (request_id,))
+    request_info = cursor.fetchone()
+    if not request_info:
+        cursor.close()
+        return False, "Request not found"
+    
+    assigned_departments = request_info['assigned_to'].split(',') if request_info['assigned_to'] else []
+    
+    # If "All Departments" is assigned, use the full hierarchy
+    if 'All Departments' in assigned_departments:
+        assigned_departments = APPROVAL_ORDER
+    
+    # Check if this department is assigned to handle this request
+    if user_department not in assigned_departments:
+        cursor.close()
+        return False, f"Request not assigned to {user_department}"
+    
+    cursor.close()
     
     next_dept = get_next_approval_level(request_id)
     
@@ -74,8 +108,22 @@ def can_approve_request(request_id, user_department):
         return False, f"Waiting for {next_dept} approval first"
 
 def get_approval_status_summary(request_id):
-    """Get a summary of approval status for display"""
+    """Get a summary of approval status for display - updated for multiple departments"""
     cursor = mysql.connection.cursor()
+    
+    # Get the assigned departments for this request
+    cursor.execute("SELECT assigned_to FROM requests WHERE id = %s", (request_id,))
+    request_info = cursor.fetchone()
+    if not request_info:
+        cursor.close()
+        return {}
+    
+    assigned_departments = request_info['assigned_to'].split(',') if request_info['assigned_to'] else []
+    
+    # If "All Departments" is assigned, use the full hierarchy
+    if 'All Departments' in assigned_departments:
+        assigned_departments = APPROVAL_ORDER
+    
     cursor.execute("""
         SELECT department, signed, signed_by, signed_at 
         FROM approvals 
@@ -84,24 +132,25 @@ def get_approval_status_summary(request_id):
     approvals = cursor.fetchall()
     cursor.close()
     
-    # Create status for each department in hierarchy order
+    # Create status for each assigned department in hierarchy order
     status = {}
     approved_depts = {app['department']: app for app in approvals if app['signed']}
     
-    for i, dept in enumerate(APPROVAL_ORDER):
-        if dept in approved_depts:
-            status[dept] = {
-                'status': 'approved',
-                'signed_at': approved_depts[dept]['signed_at'],
-                'signed_by': approved_depts[dept]['signed_by']
-            }
-        else:
-            # Check if this is the next required approval
-            next_dept = get_next_approval_level(request_id)
-            if dept == next_dept:
-                status[dept] = {'status': 'pending'}
+    for dept in APPROVAL_ORDER:
+        if dept in assigned_departments:
+            if dept in approved_depts:
+                status[dept] = {
+                    'status': 'approved',
+                    'signed_at': approved_depts[dept]['signed_at'],
+                    'signed_by': approved_depts[dept]['signed_by']
+                }
             else:
-                status[dept] = {'status': 'waiting'}
+                # Check if this is the next required approval
+                next_dept = get_next_approval_level(request_id)
+                if dept == next_dept:
+                    status[dept] = {'status': 'pending'}
+                else:
+                    status[dept] = {'status': 'waiting'}
     
     return status
 
@@ -235,22 +284,54 @@ def dashboard():
         all_requests = cursor.fetchall()
         
         # Filter requests that this department can approve based on hierarchy
-        requests = []
+        approval_requests = []
         for req in all_requests:
             can_approve, _ = can_approve_request(req['id'], user_department)
             if can_approve:
-                requests.append((
+                approval_requests.append((
                     req['id'], req['title'], req['description'], req['status'],
                     req['assigned_to'], req['created_at'], req['deadline'],
                     req['urgent'], req['requester_name']
                 ))
         
-        # Limit to 5 for dashboard
-        requests = requests[:5]
+        # Get approver's own requests (since approvers can now create requests)
+        cursor.execute("""
+            SELECT r.id, r.title, r.description, r.status, r.assigned_to, 
+                   r.created_at, r.deadline, r.urgent, COUNT(d.id) as document_count 
+            FROM requests r 
+            LEFT JOIN documents d ON r.id = d.request_id 
+            WHERE r.created_by = %s 
+            GROUP BY r.id 
+            ORDER BY r.created_at DESC 
+            LIMIT 3
+        """, (user_id,))
+        own_requests_dict = cursor.fetchall()
+        
+        own_requests = []
+        for req in own_requests_dict:
+            own_requests.append((
+                req['id'], req['title'], req['description'], req['status'],
+                req['assigned_to'], req['created_at'], req['deadline'],
+                req['urgent'], req['document_count']
+            ))
+        
+        # Combine approval requests with own requests for display, prioritizing approvals
+        requests = approval_requests[:3] + own_requests[:2]  # Show 3 approvals + 2 own requests
         
         # Get pending count for this department
-        pending_count = len([r for r in requests if r[3] in ['pending', 'approved']])
-        counts = None
+        pending_count = len([r for r in approval_requests if r[3] in ['pending', 'approved']])
+        
+        # Get counts for approver's own requests
+        cursor.execute("""
+            SELECT 
+                SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft_count,
+                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_count,
+                SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved_count
+            FROM requests 
+            WHERE created_by = %s
+        """, (user_id,))
+        counts_dict = cursor.fetchone()
+        counts = (counts_dict['draft_count'] or 0, counts_dict['pending_count'] or 0, counts_dict['approved_count'] or 0)
         
     elif user_role == 'admin':
         # Get all requests
@@ -295,7 +376,7 @@ def dashboard():
 
 @app.route('/my-requests')
 @login_required
-@role_required('requestor')
+@role_required('requestor', 'approver')
 def my_requests():
     user_id = session.get('user_id')
     
@@ -401,7 +482,7 @@ def all_requests():
 
 @app.route('/requests/new', methods=['GET', 'POST'])
 @login_required
-@role_required('requestor')
+@role_required('requestor', 'approver')
 def new_request():
     if request.method == 'POST':
         title = request.form['title']
@@ -409,7 +490,15 @@ def new_request():
         deadline = request.form.get('deadline')
         urgent = 1 if 'urgent' in request.form else 0
         status = request.form.get('status', 'draft')
-        assigned_to = request.form.get('assigned_to')  # Department selection
+        
+        # Handle multiple department assignments
+        assigned_departments = request.form.getlist('assigned_to')
+        if not assigned_departments:
+            flash('Please select at least one department', 'error')
+            return redirect(url_for('new_request'))
+        
+        # Convert list to comma-separated string for storage
+        assigned_to = ','.join(assigned_departments)
         
         cursor = mysql.connection.cursor()
         
@@ -424,12 +513,22 @@ def new_request():
         
         # Initialize approval records for hierarchy if request is submitted
         if status == 'pending':
-            for dept in APPROVAL_ORDER:
-                cursor.execute("""
-                    INSERT INTO approvals (request_id, department, signed, signed_by, 
-                                         signed_at, comments, signature)
-                    VALUES (%s, %s, 0, NULL, NULL, NULL, NULL)
-                """, (request_id, dept))
+            # Create approval records for each assigned department
+            for dept in assigned_departments:
+                if dept != 'All Departments':  # Don't create record for "All Departments"
+                    cursor.execute("""
+                        INSERT INTO approvals (request_id, department, signed, signed_by, 
+                                             signed_at, comments, signature)
+                        VALUES (%s, %s, 0, NULL, NULL, NULL, NULL)
+                    """, (request_id, dept))
+                else:
+                    # If "All Departments" is selected, create records for all departments in hierarchy
+                    for dept_name in APPROVAL_ORDER:
+                        cursor.execute("""
+                            INSERT INTO approvals (request_id, department, signed, signed_by, 
+                                                 signed_at, comments, signature)
+                            VALUES (%s, %s, 0, NULL, NULL, NULL, NULL)
+                        """, (request_id, dept_name))
         
         # Handle file upload
         if 'files' in request.files:
@@ -456,7 +555,7 @@ def new_request():
         flash('Request created successfully', 'success')
         return redirect(url_for('view_request', request_id=request_id))
     
-    # Get departments for dropdown
+    # Get departments for checklist
     cursor = mysql.connection.cursor()
     cursor.execute("SELECT DISTINCT department FROM users WHERE role = 'approver' AND department IS NOT NULL")
     departments = [row['department'] for row in cursor.fetchall()]
@@ -486,7 +585,8 @@ def view_request(request_id):
     # Get request details - convert to tuple format
     cursor.execute("""
         SELECT r.id, r.title, r.description, r.status, r.assigned_to,
-               r.created_at, r.deadline, r.urgent, u.name as requester_name 
+               r.created_at, r.deadline, r.urgent, u.name as requester_name,
+               r.created_by
         FROM requests r 
         JOIN users u ON r.created_by = u.id 
         WHERE r.id = %s
@@ -496,6 +596,15 @@ def view_request(request_id):
     if not req_dict:
         flash('Request not found', 'error')
         return redirect(url_for('dashboard'))
+    
+    # Check if user can edit this request
+    user_role = session.get('user_role')
+    user_id = session.get('user_id')
+    
+    can_edit = (
+        (user_role == 'requestor' and req_dict['created_by'] == user_id) or
+        user_role == 'admin'
+    ) and req_dict['status'].lower() != 'completed'
     
     # Convert to tuple for template
     request_data = (
@@ -575,7 +684,8 @@ def view_request(request_id):
                          can_approve=can_approve,
                          approval_message=approval_message,
                          approval_status=approval_status,
-                         hierarchy_order=APPROVAL_ORDER)
+                         hierarchy_order=APPROVAL_ORDER,
+                         can_edit=can_edit)
 
 @app.route('/requests/<int:request_id>/approve', methods=['POST'])
 @login_required
@@ -583,7 +693,7 @@ def view_request(request_id):
 def approve_request(request_id):
     user_department = session.get('user_department')
     
-    # Check if this department can approve based on hierarchy
+    # Check if this department can approve based on assignments and hierarchy
     can_approve, message = can_approve_request(request_id, user_department)
     if not can_approve:
         flash(f'Cannot approve: {message}', 'error')
@@ -602,16 +712,25 @@ def approve_request(request_id):
         WHERE request_id = %s AND department = %s
     """, (session['user_id'], comment, signature_data, request_id, user_department))
     
-    # Check if all departments in hierarchy have approved
+    # Get the assigned departments for this request
+    cursor.execute("SELECT assigned_to FROM requests WHERE id = %s", (request_id,))
+    request_info = cursor.fetchone()
+    assigned_departments = request_info['assigned_to'].split(',') if request_info['assigned_to'] else []
+    
+    # If "All Departments" is assigned, use the full hierarchy
+    if 'All Departments' in assigned_departments:
+        assigned_departments = APPROVAL_ORDER
+    
+    # Check if all assigned departments have approved
     cursor.execute("""
         SELECT COUNT(*) as approved_count FROM approvals 
         WHERE request_id = %s AND signed = 1 AND department IN %s
-    """, (request_id, APPROVAL_ORDER))
+    """, (request_id, tuple(assigned_departments)))
     approved_count = cursor.fetchone()['approved_count']
     
     # Update request status based on approval progress
-    if approved_count >= len(APPROVAL_ORDER):
-        # All required departments have approved
+    if approved_count >= len([d for d in assigned_departments if d in APPROVAL_ORDER]):
+        # All assigned departments have approved
         cursor.execute("""
             UPDATE requests 
             SET status = 'completed', updated_at = NOW()
@@ -639,7 +758,7 @@ def approve_request(request_id):
 def reject_request(request_id):
     user_department = session.get('user_department')
     
-    # Check if this department can approve/reject based on hierarchy
+    # Check if this department can approve/reject based on assignments and hierarchy
     can_approve, message = can_approve_request(request_id, user_department)
     if not can_approve:
         flash(f'Cannot reject: {message}', 'error')
@@ -668,6 +787,211 @@ def reject_request(request_id):
     
     flash(f'Request rejected by {user_department}', 'warning')
     return redirect(url_for('view_request', request_id=request_id))
+
+@app.route('/requests/<int:request_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_request(request_id):
+    cursor = mysql.connection.cursor()
+    
+    # Get request details
+    cursor.execute("""
+        SELECT r.id, r.title, r.description, r.status, r.assigned_to,
+               r.created_at, r.deadline, r.urgent, u.name as requester_name,
+               r.created_by
+        FROM requests r 
+        JOIN users u ON r.created_by = u.id 
+        WHERE r.id = %s
+    """, (request_id,))
+    req_dict = cursor.fetchone()
+    
+    if not req_dict:
+        flash('Request not found', 'error')
+        return redirect(url_for('dashboard'))
+    
+    # Check if user can edit this request
+    user_role = session.get('user_role')
+    user_id = session.get('user_id')
+    
+    # Only allow editing if:
+    # 1. User is the requestor who created it, OR
+    # 2. User is admin, OR  
+    # 3. Request is not completed
+    can_edit = (
+        (user_role in ['requestor', 'approver'] and req_dict['created_by'] == user_id) or
+        user_role == 'admin'
+    ) and req_dict['status'].lower() != 'completed'
+    
+    if not can_edit:
+        if req_dict['status'].lower() == 'completed':
+            flash('Cannot edit completed requests', 'error')
+        else:
+            flash('You do not have permission to edit this request', 'error')
+        return redirect(url_for('view_request', request_id=request_id))
+    
+    if request.method == 'POST':
+        title = request.form['title']
+        description = request.form['description']
+        deadline = request.form.get('deadline')
+        urgent = 1 if 'urgent' in request.form else 0
+        status = request.form.get('status', req_dict['status'])
+        
+        # Handle multiple department assignments
+        assigned_departments = request.form.getlist('assigned_to')
+        if not assigned_departments:
+            flash('Please select at least one department', 'error')
+            return redirect(url_for('edit_request', request_id=request_id))
+        
+        # Convert list to comma-separated string for storage
+        assigned_to = ','.join(assigned_departments)
+        
+        # Update request
+        cursor.execute("""
+            UPDATE requests 
+            SET title = %s, description = %s, deadline = %s, urgent = %s, 
+                assigned_to = %s, status = %s, updated_at = NOW()
+            WHERE id = %s
+        """, (title, description, deadline, urgent, assigned_to, status, request_id))
+        
+        # If status changed to pending and there are no approval records, create them
+        if status == 'pending':
+            cursor.execute("SELECT COUNT(*) as count FROM approvals WHERE request_id = %s", (request_id,))
+            approval_count = cursor.fetchone()['count']
+            
+            if approval_count == 0:
+                # Create approval records for each assigned department
+                for dept in assigned_departments:
+                    if dept != 'All Departments':
+                        cursor.execute("""
+                            INSERT INTO approvals (request_id, department, signed, signed_by, 
+                                                 signed_at, comments, signature)
+                            VALUES (%s, %s, 0, NULL, NULL, NULL, NULL)
+                        """, (request_id, dept))
+                    else:
+                        # If "All Departments" is selected, create records for all departments in hierarchy
+                        for dept_name in APPROVAL_ORDER:
+                            cursor.execute("""
+                                INSERT INTO approvals (request_id, department, signed, signed_by, 
+                                                     signed_at, comments, signature)
+                                VALUES (%s, %s, 0, NULL, NULL, NULL, NULL)
+                            """, (request_id, dept_name))
+        
+        # Handle additional file uploads
+        if 'files' in request.files:
+            files = request.files.getlist('files')
+            for file in files:
+                if file.filename:
+                    filename = secure_filename(file.filename)
+                    # Add timestamp to filename to avoid conflicts
+                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    filename = f"{timestamp}_{filename}"
+                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    file.save(filepath)
+                    
+                    # Save file info to database
+                    cursor.execute("""
+                        INSERT INTO documents (request_id, name, file_path, 
+                                             uploaded_at, is_initial)
+                        VALUES (%s, %s, %s, NOW(), 0)
+                    """, (request_id, filename, filepath))
+        
+        mysql.connection.commit()
+        flash('Request updated successfully', 'success')
+        return redirect(url_for('view_request', request_id=request_id))
+    
+    # Convert request dict to tuple format for template compatibility
+    request_data = (
+        req_dict['id'], req_dict['title'], req_dict['description'], 
+        req_dict['status'], req_dict['assigned_to'], req_dict['created_at'],
+        req_dict['deadline'], req_dict['urgent'], req_dict['requester_name']
+    )
+    
+    # Get documents
+    cursor.execute("""
+        SELECT id, request_id, name, file_path, uploaded_at, is_initial
+        FROM documents 
+        WHERE request_id = %s 
+        ORDER BY uploaded_at DESC
+    """, (request_id,))
+    docs_dict = cursor.fetchall()
+    
+    documents = []
+    for doc in docs_dict:
+        documents.append((
+            doc['id'], doc['request_id'], doc['name'], doc['file_path'],
+            doc['uploaded_at'], doc['is_initial']
+        ))
+    
+    # Get departments for checklist
+    cursor.execute("SELECT DISTINCT department FROM users WHERE role = 'approver' AND department IS NOT NULL")
+    departments = [row['department'] for row in cursor.fetchall()]
+    
+    cursor.close()
+    
+    return render_template('edit_request.html', 
+                         request=request_data, 
+                         documents=documents,
+                         departments=departments)
+    
+@app.route('/requests/<int:request_id>/remove-document', methods=['POST'])
+@login_required
+def remove_document(request_id):
+    document_id = request.form.get('document_id')
+    
+    if not document_id:
+        flash('Invalid document ID', 'error')
+        return redirect(url_for('edit_request', request_id=request_id))
+    
+    cursor = mysql.connection.cursor()
+    
+    # Check if user can edit this request (same logic as edit_request)
+    cursor.execute("""
+        SELECT created_by, status FROM requests WHERE id = %s
+    """, (request_id,))
+    request_info = cursor.fetchone()
+    
+    if not request_info:
+        flash('Request not found', 'error')
+        return redirect(url_for('dashboard'))
+    
+    user_role = session.get('user_role')
+    user_id = session.get('user_id')
+    
+    can_edit = (
+        (user_role in ['requestor', 'approver'] and request_info['created_by'] == user_id) or
+        user_role == 'admin'
+    ) and request_info['status'].lower() != 'completed'
+    
+    if not can_edit:
+        flash('You do not have permission to remove documents from this request', 'error')
+        return redirect(url_for('view_request', request_id=request_id))
+    
+    # Get document info before deleting
+    cursor.execute("""
+        SELECT name, file_path FROM documents 
+        WHERE id = %s AND request_id = %s
+    """, (document_id, request_id))
+    document = cursor.fetchone()
+    
+    if document:
+        # Delete file from filesystem
+        try:
+            if os.path.exists(document['file_path']):
+                os.remove(document['file_path'])
+        except Exception as e:
+            print(f"Error deleting file: {e}")
+        
+        # Delete from database
+        cursor.execute("""
+            DELETE FROM documents WHERE id = %s AND request_id = %s
+        """, (document_id, request_id))
+        
+        mysql.connection.commit()
+        flash(f'Document "{document["name"]}" removed successfully', 'success')
+    else:
+        flash('Document not found', 'error')
+    
+    cursor.close()
+    return redirect(url_for('edit_request', request_id=request_id))
 
 # Keep the rest of the routes (user management, etc.) unchanged
 @app.route('/users')
