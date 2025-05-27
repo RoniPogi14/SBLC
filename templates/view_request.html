@@ -4,12 +4,12 @@
 
 {% block extra_css %}
 <style>
-/* Additional styles for view request page */
+/* Enhanced Request View with Integrated E-Signature */
 .request-container {
     background-color: white;
     padding: 30px;
     border-radius: 12px;
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 20px auto;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
@@ -29,23 +29,295 @@
     margin: 0;
 }
 
-.request-actions {
+.header-actions {
     display: flex;
     gap: 10px;
+    align-items: center;
 }
 
-.request-details {
-    background-color: #f8f9fa;
-    padding: 20px;
-    border-radius: 8px;
+.back-btn, .new-request-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.back-btn {
+    background-color: #6c757d;
+    color: white;
+}
+
+.back-btn:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+}
+
+.new-request-btn {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.new-request-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+/* SIGNING PROGRESS CONTAINER */
+.signing-progress-container {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 15px;
+    padding: 25px;
     margin-bottom: 30px;
-    border-left: 4px solid #1a1054;
+    border: 2px solid #dee2e6;
+    position: relative;
 }
 
-.detail-grid {
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.progress-title {
+    color: #1a1054;
+    font-size: 20px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.progress-summary {
+    background: white;
+    padding: 10px 20px;
+    border-radius: 25px;
+    border: 2px solid #dee2e6;
+    font-weight: 600;
+    color: #666;
+}
+
+/* Progress Timeline */
+.signing-timeline {
+    position: relative;
+    margin: 20px 0;
+}
+
+.timeline-line {
+    position: absolute;
+    top: 25px;
+    left: 25px;
+    right: 25px;
+    height: 4px;
+    background: #dee2e6;
+    border-radius: 2px;
+}
+
+.timeline-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #20c997);
+    border-radius: 2px;
+    transition: width 0.8s ease;
+}
+
+.timeline-steps {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+}
+
+.timeline-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: white;
+    min-width: 120px;
+}
+
+.step-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+}
+
+.step-circle.pending {
+    background: #fff;
+    border: 3px solid #dee2e6;
+    color: #666;
+}
+
+.step-circle.current {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    border: 3px solid #ffc107;
+    color: white;
+    animation: pulse 2s infinite;
+}
+
+.step-circle.completed {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border: 3px solid #28a745;
+    color: white;
+}
+
+.step-circle.rejected {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    border: 3px solid #dc3545;
+    color: white;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
+    50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+}
+
+.step-info {
+    text-align: center;
+}
+
+.step-title {
+    font-weight: bold;
+    color: #333;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.step-subtitle {
+    color: #666;
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.step-timestamp {
+    color: #28a745;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.step-timestamp.pending {
+    color: #666;
+}
+
+/* Signatories List */
+.signatories-list {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+    border: 1px solid #dee2e6;
+}
+
+.signatories-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.signatories-title {
+    font-weight: bold;
+    color: #1a1054;
+    font-size: 16px;
+}
+
+.signatory-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.signatory-item:last-child {
+    border-bottom: none;
+}
+
+.signatory-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.signatory-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1a1054, #0f0838);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.signatory-details h4 {
+    margin: 0;
+    color: #333;
+    font-size: 14px;
+}
+
+.signatory-details small {
+    color: #666;
+    font-size: 12px;
+}
+
+.signatory-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.status-indicator.signed { background: #28a745; }
+.status-indicator.pending { background: #ffc107; }
+.status-indicator.current { background: #fd7e14; animation: blink 1.5s infinite; }
+.status-indicator.rejected { background: #dc3545; }
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.status-text {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 10px;
+}
+
+.status-text.signed { background: #d4edda; color: #155724; }
+.status-text.pending { background: #fff3cd; color: #856404; }
+.status-text.current { background: #ffeaa7; color: #fd7e14; }
+.status-text.rejected { background: #f8d7da; color: #721c24; }
+
+/* Request Details Grid */
+.request-details-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 15px;
+    gap: 20px;
+    margin-bottom: 30px;
+    padding: 25px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 12px;
+    border-left: 4px solid #1a1054;
 }
 
 .detail-item {
@@ -65,6 +337,45 @@
     color: #333;
 }
 
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status-draft { background-color: #e1dfff; color: #4a3cb6; }
+.status-pending { background-color: #fff3cd; color: #856404; }
+.status-in-progress { background-color: #ffeaa7; color: #fd7e14; }
+.status-approved { background-color: #d1ecf1; color: #0c5460; }
+.status-completed { background-color: #d4edda; color: #155724; }
+.status-rejected { background-color: #f8d7da; color: #721c24; }
+.status-partially-signed { background-color: #e7f3ff; color: #0066cc; }
+
+.urgent-badge {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: bold;
+    margin-left: 10px;
+    animation: urgentPulse 2s infinite;
+}
+
+@keyframes urgentPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.deadline-warning {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* Section Styling */
 .section {
     margin-bottom: 30px;
 }
@@ -72,6 +383,7 @@
 .section-title {
     color: #1a1054;
     font-size: 20px;
+    font-weight: bold;
     margin-bottom: 15px;
     padding-bottom: 8px;
     border-bottom: 2px solid #f0c240;
@@ -85,6 +397,7 @@
     border: 1px solid #dee2e6;
 }
 
+/* Documents Section */
 .documents-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -93,296 +406,656 @@
 
 .document-card {
     background-color: #f8f9fa;
-    padding: 15px;
-    border-radius: 8px;
+    padding: 20px;
+    border-radius: 10px;
     border: 1px solid #dee2e6;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    transition: all 0.3s ease;
+}
+
+.document-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
 .document-info h4 {
-    margin: 0 0 5px 0;
+    margin: 0 0 8px 0;
     color: #1a1054;
+    font-size: 16px;
 }
 
 .document-info small {
     color: #666;
+    font-size: 12px;
 }
 
-.approval-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 15px;
+.document-badge {
+    background-color: #17a2b8;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    margin-left: 10px;
 }
 
-.approval-card {
-    padding: 20px;
-    border-radius: 8px;
-    border: 1px solid #dee2e6;
-}
-
-.approval-card.approved {
-    background-color: #d4edda;
-    border-color: #28a745;
-}
-
-.approval-card.pending {
-    background-color: #fff3cd;
-    border-color: #ffc107;
-}
-
-.approval-header {
-    display: flex;
-    justify-content: space-between;
+.download-btn {
+    background: linear-gradient(135deg, #1a1054, #0f0838);
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
     align-items: center;
-    margin-bottom: 10px;
+    gap: 5px;
+    transition: all 0.3s ease;
 }
 
-.approval-department {
-    font-weight: bold;
+.download-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(26, 16, 84, 0.3);
+}
+
+/* INTEGRATED E-SIGNATURE SECTION */
+.signature-section {
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    border: 3px solid #28a745;
+    position: relative;
+}
+
+.signature-section::before {
+    content: "🖊️ Digital Signature Required";
+    position: absolute;
+    top: -15px;
+    left: 20px;
+    background: #28a745;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 20px;
     font-size: 16px;
 }
 
+.signature-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.signature-title {
+    color: #155724;
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0;
+}
+
 .approval-status {
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-size: 12px;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 10px 20px;
+    border-radius: 25px;
+    border: 2px solid #28a745;
+    color: #155724;
     font-weight: bold;
 }
 
-.approval-status.approved {
-    background-color: #28a745;
+/* Signature Input Area */
+.signature-input-area {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    border: 2px dashed #28a745;
+    margin-bottom: 25px;
+    position: relative;
+}
+
+.signature-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.signature-tab {
+    padding: 10px 20px;
+    border: 2px solid #dee2e6;
+    border-radius: 20px;
+    background: #f8f9fa;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.signature-tab.active {
+    background: #28a745;
     color: white;
+    border-color: #28a745;
 }
 
-.approval-status.pending {
-    background-color: #ffc107;
-    color: #856404;
+.signature-tab:hover:not(.active) {
+    border-color: #28a745;
+    background: #e8f5e8;
 }
 
+/* Draw Signature Tab */
+.draw-signature-area {
+    text-align: center;
+}
+
+.signature-canvas {
+    width: 100%;
+    height: 200px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    background: white;
+    cursor: crosshair;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.signature-controls {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.control-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.control-btn.clear { background: #dc3545; color: white; }
+.control-btn.undo { background: #ffc107; color: #856404; }
+.control-btn.redo { background: #17a2b8; color: white; }
+
+.control-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Saved Signatures Tab */
+.saved-signatures-area {
+    display: none;
+}
+
+.saved-signatures-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.saved-signature-card {
+    background: #f8f9fa;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.saved-signature-card:hover {
+    border-color: #28a745;
+    transform: translateY(-2px);
+}
+
+.saved-signature-card.selected {
+    border-color: #28a745;
+    background: #e8f5e8;
+}
+
+.signature-preview {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: white;
+}
+
+.signature-name {
+    font-weight: bold;
+    color: #333;
+    font-size: 14px;
+}
+
+/* Comments Section */
+.approval-comments {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    margin-bottom: 25px;
+}
+
+.comments-label {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.comments-textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    resize: vertical;
+    transition: border-color 0.3s;
+}
+
+.comments-textarea:focus {
+    outline: none;
+    border-color: #28a745;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+}
+
+/* Action Buttons */
+.signature-actions {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 25px;
+}
+
+.action-btn {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 150px;
+    justify-content: center;
+}
+
+.approve-btn {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.approve-btn:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+.reject-btn {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+}
+
+.reject-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+}
+
+.action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Comments & Communication */
 .comments-section {
-    margin-top: 30px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+    overflow: hidden;
+}
+
+.comments-header {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    padding: 20px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.comments-body {
+    padding: 20px;
 }
 
 .comment-form {
-    background-color: #f8f9fa;
+    background: #f8f9fa;
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 20px;
 }
 
-.comment-item {
-    background-color: white;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #dee2e6;
+.form-group {
     margin-bottom: 15px;
 }
 
-.comment-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #eee;
-}
-
-.comment-author {
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
     font-weight: bold;
-    color: #1a1054;
-}
-
-.comment-date {
-    color: #666;
-    font-size: 12px;
-}
-
-.comment-content {
-    line-height: 1.5;
     color: #333;
 }
 
-/* Modal Styles */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
+.form-control {
     width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-}
-
-.modal-content {
-    background-color: white;
-    margin: 5% auto;
-    padding: 0;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 600px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-}
-
-.modal-header {
-    padding: 20px 30px;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #f8f9fa;
-    border-radius: 12px 12px 0 0;
-}
-
-.modal-header h3 {
-    margin: 0;
-    color: #1a1054;
-}
-
-.modal-body {
-    padding: 30px;
-}
-
-.modal-footer {
-    padding: 20px 30px;
-    border-top: 1px solid #eee;
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    background-color: #f8f9fa;
-    border-radius: 0 0 12px 12px;
-}
-
-.signature-container {
-    border: 2px dashed #ddd;
-    border-radius: 8px;
     padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #1a1054;
+    box-shadow: 0 0 0 2px rgba(26, 16, 84, 0.1);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #1a1054, #0f0838);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(26, 16, 84, 0.3);
+}
+
+/* Status Messages */
+.status-message {
+    padding: 15px 20px;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: 600;
+    margin: 20px 0;
+}
+
+.status-success {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.status-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status-warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.validation-message {
+    color: #dc3545;
+    font-size: 14px;
+    margin-top: 10px;
+    font-weight: 600;
     text-align: center;
 }
 
-.signature-pad {
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    width: 100%;
-    height: 150px;
-    cursor: crosshair;
+.signature-required {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1) !important;
 }
 
-.signature-actions {
-    margin-top: 10px;
+/* Loading Animation */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
 }
 
-.close {
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-    color: #aaa;
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
-.close:hover {
-    color: #000;
-}
-
-.badge {
-    background-color: #17a2b8;
-    color: white;
-    padding: 3px 8px;
-    border-radius: 10px;
-    font-size: 11px;
-    margin-left: 10px;
-}
-
-.btn-success { background-color: #28a745; color: white; }
-.btn-success:hover { background-color: #218838; }
-
-.btn-danger { background-color: #dc3545; color: white; }
-.btn-danger:hover { background-color: #c82333; }
-
-.btn-sm { padding: 5px 10px; font-size: 12px; }
-
-.required { color: #dc3545; }
-
-/* Responsive design */
+/* Responsive Design */
 @media (max-width: 768px) {
     .request-container {
         margin: 10px;
         padding: 20px;
     }
-
+    
     .request-header {
         flex-direction: column;
         gap: 15px;
         align-items: stretch;
     }
-
-    .detail-grid {
+    
+    .header-actions {
+        justify-content: center;
+    }
+    
+    .request-details-grid {
         grid-template-columns: 1fr;
     }
-
-    .documents-grid,
-    .approval-grid {
+    
+    .timeline-steps {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .timeline-line {
+        display: none;
+    }
+    
+    .signature-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .signature-controls {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .saved-signatures-grid {
         grid-template-columns: 1fr;
     }
-
-    .modal-content {
-        margin: 10% auto;
-        width: 95%;
+    
+    .signatories-list {
+        padding: 15px;
+    }
+    
+    .signatory-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
     }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Request Container -->
 <div class="request-container">
     <!-- Request Header -->
     <div class="request-header">
         <h1>Request #{{ request[0] }}: {{ request[1] }}</h1>
-        <div class="request-actions">
-            {% if session.user_role == 'approver' and request[3] == 'pending' %}
-                <button class="btn btn-success" onclick="showApprovalModal()">
-                    ✓ Approve
-                </button>
-                <button class="btn btn-danger" onclick="showRejectionModal()">
-                    ✗ Reject
-                </button>
+        <div class="header-actions">
+            <a href="{{ url_for('dashboard') }}" class="back-btn">← Back</a>
+            {% if session.user_role in ['requestor', 'approver', 'admin'] %}
+            <a href="{{ url_for('create_request') if 'create_request' in view_functions else '#' }}" class="new-request-btn">
+                ➕ New Request
+            </a>
             {% endif %}
-            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Back</a>
+        </div>
+    </div>
+
+    <!-- SIGNING PROGRESS CONTAINER -->
+    <div class="signing-progress-container">
+        <div class="progress-header">
+            <h2 class="progress-title">📋 Signing Progress</h2>
+            <div class="progress-summary">
+                <span id="progressText">
+                    {% if request[3].lower() == 'completed' %}
+                        ✅ All signatures completed
+                    {% elif request[3].lower() == 'rejected' %}
+                        ❌ Request rejected
+                    {% elif request[3].lower() == 'in-progress' or request[3].lower() == 'pending' %}
+                        ⏳ {{ signed_count|default(0) }} of {{ total_signers|default(1) }} signed
+                    {% else %}
+                        📝 Awaiting signatures
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Progress Timeline -->
+        <div class="signing-timeline">
+            <div class="timeline-line">
+                <div class="timeline-progress" style="width: {{ progress_percentage|default(0) }}%;"></div>
+            </div>
+            <div class="timeline-steps">
+                <div class="timeline-step">
+                    <div class="step-circle {{ 'completed' if request[3].lower() != 'draft' else 'current' }}">
+                        {% if request[3].lower() != 'draft' %}✓{% else %}1{% endif %}
+                    </div>
+                    <div class="step-info">
+                        <div class="step-title">Request Created</div>
+                        <div class="step-subtitle">{{ request[-1] if request|length > 8 else 'Unknown' }}</div>
+                        <div class="step-timestamp">{{ request[5].strftime('%b %d, %Y') if request[5] else 'N/A' }}</div>
+                    </div>
+                </div>
+                
+                <div class="timeline-step">
+                    <div class="step-circle {{ 'completed' if request[3].lower() in ['approved', 'completed'] else ('current' if request[3].lower() in ['pending', 'in-progress'] else 'pending') }}">
+                        {% if request[3].lower() in ['approved', 'completed'] %}✓{% elif request[3].lower() in ['pending', 'in-progress'] %}🖊️{% else %}2{% endif %}
+                    </div>
+                    <div class="step-info">
+                        <div class="step-title">Under Review</div>
+                        <div class="step-subtitle">Awaiting signatures</div>
+                        <div class="step-timestamp {{ 'pending' if request[3].lower() not in ['approved', 'completed'] else '' }}">
+                            {% if request[3].lower() in ['approved', 'completed'] %}
+                                {{ approval_date.strftime('%b %d, %Y') if approval_date else 'Recently' }}
+                            {% else %}
+                                In progress
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="timeline-step">
+                    <div class="step-circle {{ 'completed' if request[3].lower() == 'completed' else ('rejected' if request[3].lower() == 'rejected' else 'pending') }}">
+                        {% if request[3].lower() == 'completed' %}✓{% elif request[3].lower() == 'rejected' %}✗{% else %}3{% endif %}
+                    </div>
+                    <div class="step-info">
+                        <div class="step-title">
+                            {% if request[3].lower() == 'completed' %}Completed{% elif request[3].lower() == 'rejected' %}Rejected{% else %}Final Step{% endif %}
+                        </div>
+                        <div class="step-subtitle">
+                            {% if request[3].lower() == 'completed' %}All signed{% elif request[3].lower() == 'rejected' %}Not approved{% else %}Pending completion{% endif %}
+                        </div>
+                        <div class="step-timestamp {{ 'pending' if request[3].lower() not in ['completed', 'rejected'] else '' }}">
+                            {% if request[3].lower() in ['completed', 'rejected'] %}
+                                {{ completion_date.strftime('%b %d, %Y') if completion_date else 'Recently' }}
+                            {% else %}
+                                Pending
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signatories List -->
+        <div class="signatories-list">
+            <div class="signatories-header">
+                <div class="signatories-title">Required Signatures</div>
+                <div style="font-size: 12px; color: #666;">
+                    {{ signed_count|default(0) }} of {{ total_signers|default(1) }} completed
+                </div>
+            </div>
+            
+            <!-- Sample signatories - replace with actual data from backend -->
+            {% set sample_signatories = [
+                {'name': 'John Smith', 'role': 'Department Head', 'status': 'signed', 'signed_date': '2024-01-15'},
+                {'name': 'Jane Doe', 'role': 'Finance Manager', 'status': 'current', 'signed_date': None},
+                {'name': 'Mike Johnson', 'role': 'HR Director', 'status': 'pending', 'signed_date': None}
+            ] %}
+            
+            {% for signatory in signatories|default(sample_signatories) %}
+            <div class="signatory-item">
+                <div class="signatory-info">
+                    <div class="signatory-avatar">
+                        {{ signatory.name[0] if signatory.name else '?' }}
+                    </div>
+                    <div class="signatory-details">
+                        <h4>{{ signatory.name|default('Unknown') }}</h4>
+                        <small>{{ signatory.role|default('Role not specified') }}</small>
+                    </div>
+                </div>
+                <div class="signatory-status">
+                    <div class="status-indicator {{ signatory.status|default('pending') }}"></div>
+                    <span class="status-text {{ signatory.status|default('pending') }}">
+                        {% if signatory.status == 'signed' %}
+                            Signed {{ signatory.signed_date if signatory.signed_date else 'recently' }}
+                        {% elif signatory.status == 'current' %}
+                            Your turn to sign
+                        {% elif signatory.status == 'rejected' %}
+                            Rejected
+                        {% else %}
+                            Waiting
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
 
     <!-- Request Details -->
-    <div class="request-details">
-        <div class="detail-grid">
-            <div class="detail-item">
-                <span class="detail-label">Status</span>
-                <span class="detail-value">
-                    <span class="status {{ request[3].lower() }}">{{ request[3] }}</span>
-                    {% if request[7] %}<span class="urgent"> (URGENT)</span>{% endif %}
-                </span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">Created By</span>
-                <span class="detail-value">{{ request[-1] if request|length > 8 else 'Unknown' }}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">Created Date</span>
-                <span class="detail-value">{{ request[5].strftime('%B %d, %Y at %I:%M %p') if request[5] else 'N/A' }}</span>
-            </div>
-            <div class="detail-item">
-                <span class="detail-label">Deadline</span>
-                <span class="detail-value deadline">
-                    {{ request[6].strftime('%B %d, %Y') if request[6] else 'No deadline set' }}
-                </span>
-            </div>
-            {% if request[4] %}
-            <div class="detail-item">
-                <span class="detail-label">Assigned To</span>
-                <span class="detail-value">{{ request[4] }}</span>
-            </div>
-            {% endif %}
+    <div class="request-details-grid">
+        <div class="detail-item">
+            <span class="detail-label">Status</span>
+            <span class="detail-value">
+                <span class="status-badge status-{{ request[3].lower().replace(' ', '-') }}">{{ request[3] }}</span>
+                {% if request[7] %}<span class="urgent-badge">URGENT</span>{% endif %}
+            </span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Created By</span>
+            <span class="detail-value">{{ request[-1] if request|length > 8 else 'Unknown' }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Created Date</span>
+            <span class="detail-value">{{ request[5].strftime('%B %d, %Y at %I:%M %p') if request[5] else 'N/A' }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Deadline</span>
+            <span class="detail-value deadline-warning">
+                {{ request[6].strftime('%B %d, %Y') if request[6] else 'No deadline set' }}
+            </span>
         </div>
     </div>
 
@@ -408,10 +1081,12 @@
                 <div class="document-info">
                     <h4>{{ doc[2] }}</h4>
                     <small>Uploaded: {{ doc[4].strftime('%b %d, %Y at %I:%M %p') if doc[4] else 'Unknown' }}</small>
-                    {% if doc[5] %}<span class="badge">Initial</span>{% endif %}
+                    {% if doc[5] %}<span class="document-badge">Initial</span>{% endif %}
                 </div>
                 <div class="document-actions">
-                    <a href="{{ url_for('download_document', doc_id=doc[0]) }}" class="btn btn-sm btn-primary">📥 Download</a>
+                    <a href="{{ url_for('download_document', doc_id=doc[0]) }}" class="download-btn">
+                        📥 Download
+                    </a>
                 </div>
             </div>
             {% endfor %}
@@ -419,208 +1094,377 @@
     </div>
     {% endif %}
 
-    <!-- Approvals Section -->
-    <div class="section">
-        <h2 class="section-title">Approvals</h2>
-        {% if approvals %}
-        <div class="approval-grid">
-            {% for approval in approvals %}
-            <div class="approval-card {{ 'approved' if approval[2] else 'pending' }}">
-                <div class="approval-header">
-                    <span class="approval-department">{{ approval[1] }}</span>
-                    <span class="approval-status {{ 'approved' if approval[2] else 'pending' }}">
-                        {% if approval[2] %}✅ APPROVED{% else %}⏳ PENDING{% endif %}
-                    </span>
-                </div>
-                {% if approval[2] %}
-                <div class="approval-details">
-                    <p><strong>Approved by:</strong> {{ approval[-1] if approval[-1] else 'Unknown' }}</p>
-                    <p><strong>Date:</strong> {{ approval[4].strftime('%B %d, %Y at %I:%M %p') if approval[4] else 'Unknown' }}</p>
-                    {% if approval[5] %}
-                    <p><strong>Comments:</strong></p>
-                    <p>{{ approval[5] }}</p>
-                    {% endif %}
-                </div>
-                {% else %}
-                <p><em>Waiting for approval from {{ approval[1] }} department.</em></p>
-                {% endif %}
-            </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <p><em>No approvals required or recorded yet.</em></p>
-        {% endif %}
-    </div>
-
-    <!-- Comments Section -->
-    <div class="section comments-section">
-        <h2 class="section-title">Comments</h2>
-        
-        <!-- Add Comment Form -->
-        <div class="comment-form">
-            <h4>Add a Comment</h4>
-            <form method="POST" action="{{ url_for('view_request', request_id=request[0]) }}">
-                <div class="form-group">
-                    <textarea name="comment" class="form-control" placeholder="Type your comment here..." required></textarea>
-                </div>
-                <button type="submit" name="action" value="add_comment" class="btn btn-primary">💬 Add Comment</button>
-            </form>
+    <!-- INTEGRATED E-SIGNATURE SECTION -->
+    <!-- Show for current signer or when it's their turn -->
+    {% if session.user_role in ['approver', 'admin'] or is_current_signer %}
+    <div class="signature-section">
+        <div class="signature-header">
+            <h2 class="signature-title">Digital Signature Required</h2>
         </div>
 
-        <!-- Comments List -->
-        {% if comments %}
-            {% for comment in comments %}
-            <div class="comment-item">
-                <div class="comment-header">
-                    <div>
-                        <span class="comment-author">{{ comment[4] if comment|length > 4 else 'Unknown User' }}</span>
-                        {% if comment|length > 5 %}
-                        <span class="comment-department">({{ comment[5] }})</span>
-                        {% endif %}
+        <form id="signatureForm" method="POST" action="{{ url_for('approve_request', request_id=request[0]) }}">
+            <!-- Signature Input Area -->
+            <div class="signature-input-area">
+                <div class="signature-tabs">
+                    <div class="signature-tab active" onclick="switchTab('draw')">✏️ Draw Signature</div>
+                    <div class="signature-tab" onclick="switchTab('saved')">💾 Saved Signatures</div>
+                </div>
+
+                <!-- Draw Signature Tab -->
+                <div id="drawSignatureTab" class="draw-signature-area">
+                    <p style="margin-bottom: 15px; color: #666;">Draw your signature in the box below:</p>
+                    <canvas id="signatureCanvas" class="signature-canvas"></canvas>
+                    <div class="signature-controls">
+                        <button type="button" class="control-btn clear" onclick="clearSignature()">
+                            🗑️ Clear
+                        </button>
+                        <button type="button" class="control-btn undo" onclick="undoSignature()">
+                            ↶ Undo
+                        </button>
+                        <button type="button" class="control-btn redo" onclick="redoSignature()">
+                            ↷ Redo
+                        </button>
                     </div>
-                    <span class="comment-date">{{ comment[3].strftime('%b %d, %Y at %I:%M %p') if comment[3] else 'Unknown date' }}</span>
+                    <div id="signatureValidation" class="validation-message" style="display: none;">
+                        Please provide a signature before proceeding
+                    </div>
                 </div>
-                <div class="comment-content">
-                    {{ comment[1]|replace('\n', '<br>')|safe if comment[1] else 'No content' }}
-                </div>
-            </div>
-            {% endfor %}
-        {% else %}
-        <p><em>No comments yet. Be the first to comment!</em></p>
-        {% endif %}
-    </div>
-</div>
 
-<!-- Approval Modal -->
-{% if session.user_role == 'approver' and request[3] == 'pending' %}
-<div id="approvalModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Approve Request #{{ request[0] }}</h3>
-            <span class="close" onclick="closeModal('approvalModal')">&times;</span>
-        </div>
-        <form method="POST" action="{{ url_for('approve_request', request_id=request[0]) }}">
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="approvalComment">Comments (Optional)</label>
-                    <textarea id="approvalComment" name="comment" class="form-control" 
-                              placeholder="Add any comments about this approval..."></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label>Digital Signature <span class="required">*</span></label>
-                    <div class="signature-container">
-                        <p><small>Please sign below to approve this request:</small></p>
-                        <canvas id="signaturePad" class="signature-pad"></canvas>
-                        <input type="hidden" name="signature" id="signatureData">
-                        <div class="signature-actions">
-                            <button type="button" onclick="clearSignature()" class="btn btn-sm btn-secondary">🗑️ Clear</button>
+                <!-- Saved Signatures Tab -->
+                <div id="savedSignatureTab" class="saved-signatures-area">
+                    <div class="saved-signatures-grid" id="savedSignaturesGrid">
+                        <div class="saved-signature-card" onclick="selectSavedSignature(1, 'data:image/png;base64,sample')">
+                            <div class="signature-preview">
+                                <div style="font-style: italic; color: #666;">Formal Signature</div>
+                            </div>
+                            <div class="signature-name">Formal Signature</div>
+                        </div>
+                        <div class="saved-signature-card" onclick="selectSavedSignature(2, 'data:image/png;base64,sample2')">
+                            <div class="signature-preview">
+                                <div style="font-style: italic; color: #666;">Quick Signature</div>
+                            </div>
+                            <div class="signature-name">Quick Signature</div>
                         </div>
                     </div>
+                    <div style="text-align: center;">
+                        <a href="{{ url_for('manage_signatures') if 'manage_signatures' in view_functions else '#' }}" target="_blank" style="color: #28a745; text-decoration: none; font-weight: bold;">
+                            ⚙️ Manage My Signatures
+                        </a>
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" onclick="closeModal('approvalModal')" class="btn btn-secondary">Cancel</button>
-                <button type="submit" class="btn btn-success">✅ Approve Request</button>
-            </div>
-        </form>
-    </div>
-</div>
 
-<!-- Rejection Modal -->
-<div id="rejectionModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Reject Request #{{ request[0] }}</h3>
-            <span class="close" onclick="closeModal('rejectionModal')">&times;</span>
-        </div>
-        <form method="POST" action="{{ url_for('reject_request', request_id=request[0]) }}">
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="rejectionComment">Reason for Rejection <span class="required">*</span></label>
-                    <textarea id="rejectionComment" name="comment" class="form-control" 
-                              placeholder="Please provide a clear reason for rejecting this request..." required></textarea>
-                </div>
-                <p><small><strong>Note:</strong> This action cannot be undone. The requestor will be notified of the rejection.</small></p>
+                <input type="hidden" name="signature" id="signatureData">
+                <input type="hidden" name="signature_method" id="signatureMethod" value="drawn">
             </div>
-            <div class="modal-footer">
-                <button type="button" onclick="closeModal('rejectionModal')" class="btn btn-secondary">Cancel</button>
-                <button type="submit" class="btn btn-danger">❌ Reject Request</button>
+
+            <!-- Approval Comments -->
+            <div class="approval-comments">
+                <label class="comments-label">Comments (Optional)</label>
+                <textarea name="comment" class="comments-textarea" 
+                          placeholder="Add any comments about this approval..."></textarea>
+                
+                <!-- Quick Templates -->
+                <div style="margin-top: 15px;">
+                    <small style="color: #666; font-weight: 600;">Quick Templates:</small><br>
+                    <button type="button" onclick="insertTemplate('Reviewed and approved as per company policy.')" 
+                            style="margin: 5px; padding: 6px 12px; border: 1px solid #28a745; border-radius: 15px; background: #e8f5e8; color: #155724; font-size: 12px; cursor: pointer;">Standard Approval</button>
+                    <button type="button" onclick="insertTemplate('Approved with conditions - please ensure all requirements are met.')" 
+                            style="margin: 5px; padding: 6px 12px; border: 1px solid #f0c240; border-radius: 15px; background: #fff3cd; color: #856404; font-size: 12px; cursor: pointer;">Conditional</button>
+                    <button type="button" onclick="insertTemplate('Request denied due to insufficient documentation.')" 
+                            style="margin: 5px; padding: 6px 12px; border: 1px solid #dc3545; border-radius: 15px; background: #f8d7da; color: #721c24; font-size: 12px; cursor: pointer;">Insufficient Info</button>
+                </div>
+            </div>
+
+            <!-- Status Messages -->
+            <div id="statusMessages"></div>
+
+            <!-- Action Buttons -->
+            <div class="signature-actions">
+                <button type="submit" name="action" value="approve" class="action-btn approve-btn" id="approveBtn" disabled>
+                    ✅ Approve & Sign
+                </button>
+                <button type="submit" name="action" value="reject" class="action-btn reject-btn" id="rejectBtn">
+                    ❌ Reject Request
+                </button>
             </div>
         </form>
     </div>
+    {% endif %}
+
+    <!-- Comments & Communication -->
+    <div class="section">
+        <div class="comments-section">
+            <div class="comments-header">
+                <h2 class="section-title" style="margin: 0; border: none; padding: 0;">💬 Comments & Communication</h2>
+            </div>
+            <div class="comments-body">
+                <!-- Add Comment Form -->
+                <div class="comment-form">
+                    <h4>💬 Add a Comment</h4>
+                    <form method="POST" action="{{ url_for('view_request', request_id=request[0]) }}">
+                        <div class="form-group">
+                            <textarea name="comment" class="form-control" placeholder="Share updates, ask questions, or provide feedback..." required></textarea>
+                        </div>
+                        <button type="submit" name="action" value="add_comment" class="btn-primary">Send Comment</button>
+                    </form>
+                </div>
+
+                <!-- Comments List -->
+                {% if comments %}
+                    {% for comment in comments %}
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #eee;">
+                            <div>
+                                <span style="font-weight: bold; color: #1a1054;">{{ comment[4] if comment|length > 4 else 'Unknown User' }}</span>
+                                {% if comment|length > 5 %}
+                                <span style="color: #666;">({{ comment[5] }})</span>
+                                {% endif %}
+                            </div>
+                            <span style="color: #666; font-size: 12px;">{{ comment[3].strftime('%b %d, %Y at %I:%M %p') if comment[3] else 'Unknown date' }}</span>
+                        </div>
+                        <div style="line-height: 1.5; color: #333;">
+                            {{ comment[1]|replace('\n', '<br>')|safe if comment[1] else 'No content' }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <p style="text-align: center; color: #666; padding: 20px;"><em>No comments yet. Start the conversation!</em></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
-{% endif %}
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/1.5.3/signature_pad.min.js"></script>
 <script>
     let signaturePad;
+    let signatureHistory = [];
+    let historyStep = -1;
+    let currentSignatureMethod = 'drawn';
+    let selectedSavedSignature = null;
 
-    function showApprovalModal() {
-        document.getElementById('approvalModal').style.display = 'block';
-        // Initialize signature pad after modal is shown
-        setTimeout(initSignaturePad, 100);
-    }
+    // Initialize signature pad
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeSignaturePad();
+        updateProgressAnimation();
+    });
 
-    function showRejectionModal() {
-        document.getElementById('rejectionModal').style.display = 'block';
-    }
-
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-    }
-
-    function initSignaturePad() {
-        const canvas = document.getElementById('signaturePad');
+    function initializeSignaturePad() {
+        const canvas = document.getElementById('signatureCanvas');
         if (canvas && typeof SignaturePad !== 'undefined') {
             signaturePad = new SignaturePad(canvas, {
-                backgroundColor: 'rgba(255, 255, 255, 0)',
-                penColor: 'rgb(0, 0, 0)'
+                backgroundColor: 'rgba(255, 255, 255, 1)',
+                penColor: 'rgb(0, 0, 0)',
+                minWidth: 2,
+                maxWidth: 4
             });
             
-            // Resize canvas to fit container
-            function resizeCanvas() {
-                const ratio = Math.max(window.devicePixelRatio || 1, 1);
-                canvas.width = canvas.offsetWidth * ratio;
-                canvas.height = canvas.offsetHeight * ratio;
-                canvas.getContext("2d").scale(ratio, ratio);
-                signaturePad.clear();
-            }
+            signaturePad.addEventListener('endStroke', function() {
+                saveSignatureState();
+                updateApproveButton();
+            });
             
-            window.addEventListener("resize", resizeCanvas);
             resizeCanvas();
+            window.addEventListener("resize", resizeCanvas);
         }
+    }
+
+    function updateProgressAnimation() {
+        // Animate progress bar on load
+        const progressBar = document.querySelector('.timeline-progress');
+        if (progressBar) {
+            const targetWidth = progressBar.style.width;
+            progressBar.style.width = '0%';
+            setTimeout(() => {
+                progressBar.style.width = targetWidth;
+            }, 500);
+        }
+    }
+
+    function resizeCanvas() {
+        const canvas = document.getElementById('signatureCanvas');
+        if (canvas && signaturePad) {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+        }
+    }
+
+    function switchTab(tabName) {
+        // Update tab appearance
+        document.querySelectorAll('.signature-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        if (tabName === 'draw') {
+            document.querySelector('.signature-tab:first-child').classList.add('active');
+            document.getElementById('drawSignatureTab').style.display = 'block';
+            document.getElementById('savedSignatureTab').style.display = 'none';
+            currentSignatureMethod = 'drawn';
+            document.getElementById('signatureMethod').value = 'drawn';
+        } else {
+            document.querySelector('.signature-tab:last-child').classList.add('active');
+            document.getElementById('drawSignatureTab').style.display = 'none';
+            document.getElementById('savedSignatureTab').style.display = 'block';
+            currentSignatureMethod = 'saved';
+            document.getElementById('signatureMethod').value = 'saved';
+        }
+        
+        updateApproveButton();
     }
 
     function clearSignature() {
         if (signaturePad) {
             signaturePad.clear();
+            signatureHistory = [];
+            historyStep = -1;
+            updateApproveButton();
         }
     }
 
-    // Handle approval form submission
-    document.querySelector('#approvalModal form')?.addEventListener('submit', function(e) {
-        if (signaturePad && !signaturePad.isEmpty()) {
-            document.getElementById('signatureData').value = signaturePad.toDataURL();
-        } else {
-            e.preventDefault();
-            alert('Please provide a digital signature before approving the request.');
-            return false;
+    function saveSignatureState() {
+        historyStep++;
+        if (historyStep < signatureHistory.length) {
+            signatureHistory.length = historyStep;
         }
-    });
+        signatureHistory.push(signaturePad.toDataURL());
+    }
 
-    // Close modal when clicking outside
-    window.onclick = function(event) {
-        const approvalModal = document.getElementById('approvalModal');
-        const rejectionModal = document.getElementById('rejectionModal');
+    function undoSignature() {
+        if (historyStep > 0) {
+            historyStep--;
+            const imageData = signatureHistory[historyStep];
+            const img = new Image();
+            img.onload = function() {
+                signaturePad.clear();
+                signaturePad._ctx.drawImage(img, 0, 0);
+            };
+            img.src = imageData;
+            updateApproveButton();
+        }
+    }
+
+    function redoSignature() {
+        if (historyStep < signatureHistory.length - 1) {
+            historyStep++;
+            const imageData = signatureHistory[historyStep];
+            const img = new Image();
+            img.onload = function() {
+                signaturePad.clear();
+                signaturePad._ctx.drawImage(img, 0, 0);
+            };
+            img.src = imageData;
+            updateApproveButton();
+        }
+    }
+
+    function selectSavedSignature(signatureId, signatureData) {
+        // Remove previous selection
+        document.querySelectorAll('.saved-signature-card').forEach(card => {
+            card.classList.remove('selected');
+        });
         
-        if (event.target === approvalModal) {
-            closeModal('approvalModal');
+        // Add selection
+        event.target.closest('.saved-signature-card').classList.add('selected');
+        
+        // Store signature data
+        selectedSavedSignature = { id: signatureId, data: signatureData };
+        document.getElementById('signatureData').value = signatureData;
+        
+        updateApproveButton();
+    }
+
+    function updateApproveButton() {
+        const approveBtn = document.getElementById('approveBtn');
+        if (!approveBtn) return;
+        
+        let hasSignature = false;
+        
+        if (currentSignatureMethod === 'drawn') {
+            hasSignature = signaturePad && !signaturePad.isEmpty();
+        } else {
+            hasSignature = selectedSavedSignature !== null;
         }
-        if (event.target === rejectionModal) {
-            closeModal('rejectionModal');
+        
+        if (hasSignature) {
+            approveBtn.disabled = false;
+            approveBtn.style.opacity = '1';
+        } else {
+            approveBtn.disabled = true;
+            approveBtn.style.opacity = '0.6';
         }
+    }
+
+    function showStatusMessage(message, type) {
+        const statusContainer = document.getElementById('statusMessages');
+        if (!statusContainer) return;
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `status-message status-${type}`;
+        messageDiv.textContent = message;
+        
+        statusContainer.innerHTML = '';
+        statusContainer.appendChild(messageDiv);
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            messageDiv.remove();
+        }, 5000);
+    }
+
+    // Form submission handling
+    const signatureForm = document.getElementById('signatureForm');
+    if (signatureForm) {
+        signatureForm.addEventListener('submit', function(e) {
+            const action = e.submitter.value;
+            
+            if (action === 'approve') {
+                // Validate signature for approval
+                let hasSignature = false;
+                
+                if (currentSignatureMethod === 'drawn') {
+                    if (signaturePad && !signaturePad.isEmpty()) {
+                        document.getElementById('signatureData').value = signaturePad.toDataURL();
+                        hasSignature = true;
+                    }
+                } else {
+                    hasSignature = selectedSavedSignature !== null;
+                }
+                
+                if (!hasSignature) {
+                    e.preventDefault();
+                    showStatusMessage('Please provide a digital signature before approving the request.', 'error');
+                    return false;
+                }
+                
+                // Add loading state
+                const approveBtn = document.getElementById('approveBtn');
+                approveBtn.innerHTML = '<span class="loading"></span> Processing Approval...';
+                approveBtn.disabled = true;
+                
+            } else if (action === 'reject') {
+                // Validate rejection reason
+                const comment = document.querySelector('textarea[name="comment"]').value.trim();
+                if (!comment) {
+                    e.preventDefault();
+                    showStatusMessage('Please provide a reason for rejecting this request.', 'error');
+                    return false;
+                }
+                
+                if (!confirm('Are you sure you want to reject this request? This action cannot be undone.')) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Add loading state
+                const rejectBtn = document.getElementById('rejectBtn');
+                rejectBtn.innerHTML = '<span class="loading"></span> Processing Rejection...';
+                rejectBtn.disabled = true;
+            }
+        });
     }
 
     // Auto-resize textareas
@@ -630,5 +1474,45 @@
             this.style.height = this.scrollHeight + 'px';
         });
     });
+
+    // Quick template functions
+    function insertTemplate(template) {
+        const textarea = document.querySelector('textarea[name="comment"]');
+        if (textarea) {
+            textarea.value = template;
+            textarea.focus();
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
+    }
+
+    // Real-time progress updates (if using WebSocket)
+    function updateSigningProgress(data) {
+        // Update progress percentage
+        const progressBar = document.querySelector('.timeline-progress');
+        if (progressBar) {
+            progressBar.style.width = data.percentage + '%';
+        }
+        
+        // Update progress text
+        const progressText = document.getElementById('progressText');
+        if (progressText) {
+            progressText.textContent = data.message;
+        }
+        
+        // Update signatory statuses
+        if (data.signatories) {
+            data.signatories.forEach(signatory => {
+                const signatoryItem = document.querySelector(`[data-signatory-id="${signatory.id}"]`);
+                if (signatoryItem) {
+                    const statusIndicator = signatoryItem.querySelector('.status-indicator');
+                    const statusText = signatoryItem.querySelector('.status-text');
+                    
+                    if (statusIndicator) statusIndicator.className = `status-indicator ${signatory.status}`;
+                    if (statusText) statusText.textContent = signatory.statusText;
+                }
+            });
+        }
+    }
 </script>
 {% endblock %}

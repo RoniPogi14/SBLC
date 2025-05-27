@@ -11,15 +11,19 @@
     <div class="overview-boxes">
         <div class="box total">
             <h1>{{ user_count or 0 }}</h1>
-            <p>Total Users</p>
+            <p>Active Users</p>
         </div>
         <div class="box approved">
-            <h1>{{ department_count or 5 }}</h1>
+            <h1>{{ department_count or 6 }}</h1>
             <p>Departments</p>
         </div>
         <div class="box info">
             <h1>{{ approver_count or 0 }}</h1>
             <p>Approvers</p>
+        </div>
+        <div class="box pending">
+            <h1>{{ archived_count or 0 }}</h1>
+            <p>Archived Users</p>
         </div>
     </div>
 
@@ -64,103 +68,159 @@
                 
                 <div class="form-group" id="departmentGroup">
                     <label for="department">Department</label>
-                    <select id="department" name="department" class="form-control">
+                    <select id="department" name="department" class="form-control" onchange="toggleOthersDepartment()">
                         <option value="">Select Department</option>
                         <option value="IT">IT</option>
                         <option value="DEAN">DEAN</option>
                         <option value="ADMIN">ADMIN</option>
                         <option value="Accounting">Accounting</option>
                         <option value="HR">HR</option>
+                        <option value="Others">Others</option>
                     </select>
                     <small class="form-help">Required for Requestors and Approvers</small>
                 </div>
             </div>
             
+            <!-- Others Department Input Field -->
+            <div class="form-group" id="othersDepartmentGroup" style="display: none;">
+                <label for="othersDepartment">Specify Department <span>*</span></label>
+                <input type="text" id="othersDepartment" name="othersDepartment" class="form-control" 
+                       placeholder="e.g., Marketing, Engineering, Research, etc." />
+                <small class="form-help">Please specify the department name</small>
+            </div>
+            
             <div class="button-group">
                 <button type="submit" class="btn btn-primary">➕ Create User</button>
-                <button type="reset" class="btn btn-secondary">Clear Form</button>
+                <button type="reset" class="btn btn-secondary" onclick="resetForm()">Clear Form</button>
             </div>
         </form>
     </div>
 
-    <!-- Existing Users Table -->
+    <!-- Users Management Tabs -->
     <div class="recent-requests">
-        <h2>All Users</h2>
-        
-        <!-- Department Filter Tabs -->
-        <div class="tabs">
-            <button class="tab active" data-filter="all">All Users</button>
-            <button class="tab" data-filter="IT">IT</button>
-            <button class="tab" data-filter="DEAN">DEAN</button>
-            <button class="tab" data-filter="ADMIN">ADMIN</button>
-            <button class="tab" data-filter="Accounting">Accounting</button>
-            <button class="tab" data-filter="HR">HR</button>
-            <button class="tab" data-filter="no-dept">No Department</button>
-        </div>
-
-        <table class="request-table" id="usersTable">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Full Name</th>
-                    <th>Role</th>
-                    <th>Department</th>
-                    <th>Email</th>
-                    <th>Created</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in users %}
-                <tr data-department="{{ user.department or 'no-dept' }}">
-                    <td>{{ user.id }}</td>
-                    <td>{{ user.username }}</td>
-                    <td>{{ user.name }}</td>
-                    <td>
-                        <span class="status {{ user.role }}">
-                            {{ user.role|title }}
-                        </span>
-                    </td>
-                    <td>{{ user.department or '-' }}</td>
-                    <td>{{ user.email or '-' }}</td>
-                    <td>{{ user.created_at.strftime('%b %d, %Y') if user.created_at else '-' }}</td>
-                    <td>
-                        <button class="view-btn" onclick="editUser({{ user.id }})">Edit</button>
-                        {% if user.id != session.user_id %}
-                            <button class="reject-btn" onclick="deleteUser({{ user.id }}, '{{ user.username }}')">Delete</button>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        {% if not users %}
-        <div class="no-requests">
-            <p>No users found in the system.</p>
-        </div>
-        {% endif %}
-    </div>
-
-    <!-- Department Approvers Management -->
-    <div class="recent-requests" style="margin-top: 40px;">
-        <h2>Department Approvers</h2>
-        <p style="color: #666; margin-bottom: 20px;">
-            Each department should have at least one approver. Approvers can review and approve requests assigned to their department.
-        </p>
-
-        <div class="overview-boxes">
-            {% for dept in ['IT', 'DEAN', 'ADMIN', 'Accounting', 'HR'] %}
-            <div class="box info" style="min-width: 150px;">
-                <h1 id="count-{{ dept }}">0</h1>
-                <p>{{ dept }}</p>
-                <small>Approvers</small>
+        <div class="section-header">
+            <h2>User Management</h2>
+            <div class="user-management-tabs">
+                <button class="tab active" data-view="active" onclick="switchUserView('active')">
+                    👥 Active Users
+                </button>
+                <button class="tab" data-view="archived" onclick="switchUserView('archived')">
+                    📁 Archived Users
+                </button>
             </div>
-            {% endfor %}
+        </div>
+        
+        <!-- Active Users View -->
+        <div id="activeUsersView" class="user-view">
+            <!-- Department Filter Tabs -->
+            <div class="tabs">
+                <button class="tab active" data-filter="all">All Users</button>
+                <button class="tab" data-filter="IT">IT</button>
+                <button class="tab" data-filter="DEAN">DEAN</button>
+                <button class="tab" data-filter="ADMIN">ADMIN</button>
+                <button class="tab" data-filter="Accounting">Accounting</button>
+                <button class="tab" data-filter="HR">HR</button>
+                <button class="tab" data-filter="Others">Others</button>
+                <button class="tab" data-filter="no-dept">No Department</button>
+            </div>
+
+            <table class="request-table" id="activeUsersTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>Role</th>
+                        <th>Department</th>
+                        <th>Email</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    {% if not user.archived %}
+                    <tr data-department="{{ user.department or 'no-dept' }}" data-user-id="{{ user.id }}">
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.name }}</td>
+                        <td>
+                            <span class="status {{ user.role }}">
+                                {{ user.role|title }}
+                            </span>
+                        </td>
+                        <td>{{ user.department or '-' }}</td>
+                        <td>{{ user.email or '-' }}</td>
+                        <td>{{ user.created_at.strftime('%b %d, %Y') if user.created_at else '-' }}</td>
+                        <td>
+                            <button class="view-btn" onclick="editUser({{ user.id }})">✏️ Edit</button>
+                            {% if user.id != session.user_id %}
+                                <button class="archive-btn" onclick="archiveUser({{ user.id }}, '{{ user.username }}')">📁 Archive</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Archived Users View -->
+        <div id="archivedUsersView" class="user-view" style="display: none;">
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
+                <h4 style="margin: 0 0 8px 0; color: #856404;">📁 Archived Users</h4>
+                <p style="margin: 0; color: #856404; font-size: 14px;">
+                    These users have been archived and cannot log in. Their data is preserved for record-keeping purposes.
+                    You can restore them to active status if needed.
+                </p>
+            </div>
+
+            <table class="request-table" id="archivedUsersTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>Role</th>
+                        <th>Department</th>
+                        <th>Email</th>
+                        <th>Archived Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    {% if user.archived %}
+                    <tr data-user-id="{{ user.id }}" class="archived-row">
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.name }}</td>
+                        <td>
+                            <span class="status archived">
+                                {{ user.role|title }}
+                            </span>
+                        </td>
+                        <td>{{ user.department or '-' }}</td>
+                        <td>{{ user.email or '-' }}</td>
+                        <td>{{ user.archived_at.strftime('%b %d, %Y') if user.archived_at else '-' }}</td>
+                        <td>
+                            <button class="view-btn" onclick="viewArchivedUser({{ user.id }})">👁️ View</button>
+                            <button class="restore-btn" onclick="restoreUser({{ user.id }}, '{{ user.username }}')">🔄 Restore</button>
+                            <button class="permanent-delete-btn" onclick="permanentDeleteUser({{ user.id }}, '{{ user.username }}')">🗑️ Delete</button>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% if not users or users|selectattr('archived', 'equalto', true)|list|length == 0 %}
+            <div class="no-requests">
+                <p>No archived users found.</p>
+            </div>
+            {% endif %}
         </div>
     </div>
-</div>
 
 <!-- Edit User Modal -->
 <div id="editModal" class="modal" style="display: none;">
@@ -190,17 +250,12 @@
                         <option value="admin">Admin</option>
                     </select>
                 </div>
-                
-                <div class="form-group" id="editDepartmentGroup">
-                    <label for="edit_department">Department</label>
-                    <select id="edit_department" name="department" class="form-control">
-                        <option value="">Select Department</option>
-                        <option value="IT">IT</option>
-                        <option value="DEAN">DEAN</option>
-                        <option value="ADMIN">ADMIN</option>
-                        <option value="Accounting">Accounting</option>
-                        <option value="HR">HR</option>
-                    </select>
+
+                <!-- Edit Others Department Input -->
+                <div class="form-group" id="editOthersDepartmentGroup" style="display: none;">
+                    <label for="editOthersDepartment">Specify Department <span>*</span></label>
+                    <input type="text" id="editOthersDepartment" name="othersDepartment" class="form-control" 
+                           placeholder="e.g., Marketing, Engineering, Research, etc." />
                 </div>
                 
                 <div class="form-group">
@@ -217,8 +272,24 @@
     </div>
 </div>
 
+<!-- View Archived User Modal -->
+<div id="viewArchivedModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>👁️ View Archived User</h3>
+            <span class="close" onclick="closeViewArchivedModal()">&times;</span>
+        </div>
+        <div class="modal-body" id="archivedUserDetails">
+            <!-- User details will be populated here -->
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="closeViewArchivedModal()" class="btn btn-secondary">Close</button>
+        </div>
+    </div>
+</div>
+
 <style>
-/* Additional styles for user management */
+/* Additional styles for enhanced user management */
 .status.requestor {
     background-color: #e3f2fd;
     color: #1976d2;
@@ -232,6 +303,100 @@
 .status.admin {
     background-color: #fce4ec;
     color: #c2185b;
+}
+
+.status.archived {
+    background-color: #f5f5f5;
+    color: #6c757d;
+    text-decoration: line-through;
+}
+
+.archive-btn {
+    background-color: #ffc107;
+    color: #856404;
+    padding: 6px 12px;
+    font-size: 12px;
+    margin-left: 5px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.archive-btn:hover {
+    background-color: #e0a800;
+    transform: translateY(-1px);
+}
+
+.restore-btn {
+    background-color: #28a745;
+    color: white;
+    padding: 6px 12px;
+    font-size: 12px;
+    margin-left: 5px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.restore-btn:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
+}
+
+.permanent-delete-btn {
+    background-color: #dc3545;
+    color: white;
+    padding: 6px 12px;
+    font-size: 12px;
+    margin-left: 5px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.permanent-delete-btn:hover {
+    background-color: #c82333;
+    transform: translateY(-1px);
+}
+
+.user-management-tabs {
+    display: flex;
+    gap: 10px;
+}
+
+.user-management-tabs .tab {
+    padding: 10px 20px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-management-tabs .tab.active {
+    background: #1a1054;
+    color: white;
+    border-color: #1a1054;
+}
+
+.user-management-tabs .tab:hover:not(.active) {
+    border-color: #1a1054;
+    background: #f8f9fa;
+}
+
+.archived-row {
+    background-color: #f8f9fa;
+    opacity: 0.8;
 }
 
 .modal {
@@ -294,6 +459,59 @@
 .close:hover {
     color: #000;
 }
+
+/* Others Department Input Styling */
+#othersDepartmentGroup {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+    padding: 15px;
+    background: #e8f5e8;
+    border-radius: 8px;
+    border: 1px solid #28a745;
+}
+
+#editOthersDepartmentGroup {
+    padding: 15px;
+    background: #e8f5e8;
+    border-radius: 8px;
+    border: 1px solid #28a745;
+    margin-top: 10px;
+}
+
+.user-details-card {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.user-details-card h4 {
+    color: #1a1054;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #f0c240;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    font-weight: bold;
+    color: #555;
+}
+
+.detail-value {
+    color: #333;
+}
 </style>
 {% endblock %}
 
@@ -303,10 +521,13 @@
 function toggleDepartment() {
     const role = document.getElementById('role').value;
     const deptGroup = document.getElementById('departmentGroup');
+    const othersDeptGroup = document.getElementById('othersDepartmentGroup');
     
     if (role === 'admin') {
         deptGroup.style.display = 'none';
+        othersDeptGroup.style.display = 'none';
         document.getElementById('department').value = '';
+        document.getElementById('othersDepartment').value = '';
     } else {
         deptGroup.style.display = 'block';
     }
@@ -315,37 +536,93 @@ function toggleDepartment() {
 function toggleEditDepartment() {
     const role = document.getElementById('edit_role').value;
     const deptGroup = document.getElementById('editDepartmentGroup');
+    const othersDeptGroup = document.getElementById('editOthersDepartmentGroup');
     
     if (role === 'admin') {
         deptGroup.style.display = 'none';
+        othersDeptGroup.style.display = 'none';
         document.getElementById('edit_department').value = '';
+        document.getElementById('editOthersDepartment').value = '';
     } else {
         deptGroup.style.display = 'block';
     }
 }
 
-// Department filter functionality
-document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', function() {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
-        
-        const filter = this.dataset.filter;
-        const rows = document.querySelectorAll('#usersTable tbody tr');
-        
-        rows.forEach(row => {
-            if (filter === 'all') {
-                row.style.display = '';
-            } else {
-                row.style.display = row.dataset.department === filter ? '' : 'none';
-            }
+// Toggle Others department input field
+function toggleOthersDepartment() {
+    const dept = document.getElementById('department').value;
+    const othersDeptGroup = document.getElementById('othersDepartmentGroup');
+    const othersDeptInput = document.getElementById('othersDepartment');
+    
+    if (dept === 'Others') {
+        othersDeptGroup.style.display = 'block';
+        othersDeptInput.required = true;
+    } else {
+        othersDeptGroup.style.display = 'none';
+        othersDeptInput.required = false;
+        othersDeptInput.value = '';
+    }
+}
+
+function toggleEditOthersDepartment() {
+    const dept = document.getElementById('edit_department').value;
+    const othersDeptGroup = document.getElementById('editOthersDepartmentGroup');
+    const othersDeptInput = document.getElementById('editOthersDepartment');
+    
+    if (dept === 'Others') {
+        othersDeptGroup.style.display = 'block';
+        othersDeptInput.required = true;
+    } else {
+        othersDeptGroup.style.display = 'none';
+        othersDeptInput.required = false;
+        othersDeptInput.value = '';
+    }
+}
+
+// Reset form function
+function resetForm() {
+    document.getElementById('othersDepartmentGroup').style.display = 'none';
+    document.getElementById('othersDepartment').required = false;
+    toggleDepartment();
+}
+
+// Switch between active and archived users view
+function switchUserView(view) {
+    // Update tab appearance
+    document.querySelectorAll('.user-management-tabs .tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelector(`[data-view="${view}"]`).classList.add('active');
+    
+    // Show/hide views
+    document.getElementById('activeUsersView').style.display = view === 'active' ? 'block' : 'none';
+    document.getElementById('archivedUsersView').style.display = view === 'archived' ? 'block' : 'none';
+}
+
+// Department filter functionality for active users
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('#activeUsersView .tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('#activeUsersView .tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            const filter = this.dataset.filter;
+            const rows = document.querySelectorAll('#activeUsersTable tbody tr');
+            
+            rows.forEach(row => {
+                if (filter === 'all') {
+                    row.style.display = '';
+                } else {
+                    row.style.display = row.dataset.department === filter ? '' : 'none';
+                }
+            });
         });
     });
 });
 
 // Count approvers per department
 function countApprovers() {
-    const departments = ['IT', 'DEAN', 'ADMIN', 'Accounting', 'HR'];
+    const departments = ['IT', 'DEAN', 'ADMIN', 'Accounting', 'HR', 'Others'];
     departments.forEach(dept => {
         const count = document.querySelectorAll(`tr[data-department="${dept}"] .status.approver`).length;
         const countEl = document.getElementById(`count-${dept}`);
@@ -357,7 +634,6 @@ function countApprovers() {
 
 // Edit user function
 function editUser(userId) {
-    // Fetch user data via AJAX
     fetch(`/admin/users/${userId}/details`)
         .then(response => response.json())
         .then(data => {
@@ -366,17 +642,21 @@ function editUser(userId) {
                 return;
             }
             
-            // Populate the form with user data
             document.getElementById('edit_user_id').value = data.id;
             document.getElementById('edit_name').value = data.name || '';
             document.getElementById('edit_email').value = data.email || '';
             document.getElementById('edit_role').value = data.role;
-            document.getElementById('edit_department').value = data.department || '';
             
-            // Show/hide department field based on role
+            // Handle department and others department
+            if (data.department && !['IT', 'DEAN', 'ADMIN', 'Accounting', 'HR'].includes(data.department)) {
+                document.getElementById('edit_department').value = 'Others';
+                document.getElementById('editOthersDepartment').value = data.department;
+                toggleEditOthersDepartment();
+            } else {
+                document.getElementById('edit_department').value = data.department || '';
+            }
+            
             toggleEditDepartment();
-            
-            // Show the modal
             document.getElementById('editModal').style.display = 'block';
         })
         .catch(error => {
@@ -389,23 +669,119 @@ function closeEditModal() {
     document.getElementById('editModal').style.display = 'none';
 }
 
-// Delete user function
-function deleteUser(userId, username) {
-    if (confirm(`Are you sure you want to delete user "${username}"? This action cannot be undone.`)) {
-        // Create a form and submit it
+// Archive user function (replaces delete)
+function archiveUser(userId, username) {
+    if (confirm(`Are you sure you want to archive user "${username}"? They will not be able to log in, but their data will be preserved.`)) {
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = `/admin/users/${userId}/delete`;
+        form.action = `/admin/users/${userId}/archive`;
         document.body.appendChild(form);
         form.submit();
     }
 }
 
-// Close modal when clicking outside
+// Restore user function
+function restoreUser(userId, username) {
+    if (confirm(`Are you sure you want to restore user "${username}" to active status?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/users/${userId}/restore`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Permanent delete user function
+function permanentDeleteUser(userId, username) {
+    if (confirm(`⚠️ PERMANENT DELETE WARNING ⚠️\n\nAre you absolutely sure you want to permanently delete user "${username}"?\n\nThis action:\n- Cannot be undone\n- Will remove all user data\n- May affect request history\n\nType "DELETE" below to confirm:`)) {
+        const confirmation = prompt('Type "DELETE" to confirm permanent deletion:');
+        if (confirmation === 'DELETE') {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/admin/users/${userId}/permanent-delete`;
+            document.body.appendChild(form);
+            form.submit();
+        } else {
+            alert('Deletion cancelled - confirmation text did not match.');
+        }
+    }
+}
+
+// View archived user function
+function viewArchivedUser(userId) {
+    fetch(`/admin/users/${userId}/details`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('Error loading user data');
+                return;
+            }
+            
+            const detailsHtml = `
+                <div class="user-details-card">
+                    <h4>👤 User Information</h4>
+                    <div class="detail-row">
+                        <span class="detail-label">User ID:</span>
+                        <span class="detail-value">${data.id}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Username:</span>
+                        <span class="detail-value">${data.username}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Full Name:</span>
+                        <span class="detail-value">${data.name || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Email:</span>
+                        <span class="detail-value">${data.email || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Role:</span>
+                        <span class="detail-value">${data.role || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Department:</span>
+                        <span class="detail-value">${data.department || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Status:</span>
+                        <span class="detail-value" style="color: #dc3545; font-weight: bold;">📁 Archived</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Created:</span>
+                        <span class="detail-value">${data.created_at || 'N/A'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Archived:</span>
+                        <span class="detail-value">${data.archived_at || 'N/A'}</span>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('archivedUserDetails').innerHTML = detailsHtml;
+            document.getElementById('viewArchivedModal').style.display = 'block';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading user data');
+        });
+}
+
+function closeViewArchivedModal() {
+    document.getElementById('viewArchivedModal').style.display = 'none';
+}
+
+// Close modals when clicking outside
 window.onclick = function(event) {
-    const modal = document.getElementById('editModal');
-    if (event.target === modal) {
+    const editModal = document.getElementById('editModal');
+    const viewModal = document.getElementById('viewArchivedModal');
+    
+    if (event.target === editModal) {
         closeEditModal();
+    }
+    if (event.target === viewModal) {
+        closeViewArchivedModal();
     }
 }
 
