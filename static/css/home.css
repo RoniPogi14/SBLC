@@ -1,0 +1,332 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Arial', sans-serif;
+}
+
+body {
+  background-color: #4b1f61;
+  background-image: url('../images/SBLC\\ logo.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 400px auto;
+  background-attachment: fixed;
+}
+
+/* Overlay Logo */
+body::before {
+  content: "";
+  position: fixed;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-image: url('../images/SBLC Logo.jpg');
+  background-size: 500px auto;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.1;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(234, 226, 239, 0.8);
+  z-index: -1;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(to right, #01092b, #47005a);
+  color: white;
+  padding: 10px 20px;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.logo {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+
+.header h1 {
+  font-size: 22px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.user-info span {
+  font-size: 14px;
+}
+
+.logout-btn,
+.login-btn,
+.cta-btn,
+.department-btn {
+    background-color: #53035c;
+    color: #f9f6f6;
+    border: none;
+    padding: 6px 12px;         /* smaller padding */
+    font-size: 13px;           /* smaller font */
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    width: fit-content;        /* only as wide as its content */
+  }
+  
+.logout-btn {
+  padding: 6px 15px;
+  border-radius: 8px;
+}
+
+.logout-btn:hover,
+.login-btn:hover,
+.cta-btn:hover,
+.department-btn:hover {
+  background-color: #7418a8;
+  transform: scale(1.05);
+}
+
+/* Containers */
+.main-container {
+  padding: 20px;
+}
+
+.centered-container {
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Login Section */
+.login-section {
+  background-color: white;
+  border: 2px solid #020005;
+  padding: 20px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.login-section h2 {
+  margin-bottom: 10px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.line {
+  height: 5px;
+  background-color: black;
+  margin-bottom: 15px;
+  box-shadow: 0px 3px 3px #888888;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+form label {
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+form input {
+  padding: 8px;
+  margin-bottom: 15px;
+  border: 1px solid #444;
+  border-radius: 5px;
+}
+
+form input:focus {
+  outline: none;
+  border: 2px solid #6c1b9a;
+  background-color: #f3f0f8;
+}
+
+/* Login buttons group */
+.login-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+  align-items: flex-start;
+}
+
+.login-buttons .login-btn {
+  width: 250px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.login-buttons .login-btn:hover {
+  transform: scale(1.03);
+}
+
+/* Intro Section */
+.intro-section {
+  background-color: #fff;
+  border: 2px solid #2e0a3f;
+  padding: 20px;
+  margin: 20px auto;
+  max-width: 900px;
+  font-size: 14px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.intro-section h2 {
+  font-size: 20px;
+  color: #47005a;
+  margin-bottom: 10px;
+}
+
+.intro-section p {
+  color: #333;
+  line-height: 1.6;
+}
+
+/* Get Started Button */
+.cta-btn {
+  margin-top: 50px;
+}
+
+/* Academics Department */
+.academics-department {
+  background-color: white;
+  border: 2px solid #020006;
+  padding: 20px;
+  margin-top: 20px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  text-align: center;
+  height: 100%; /* Make sure the parent container takes up full height */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* This will center the department list vertically */
+  align-items: center; /* This will center it horizontally */
+}
+
+.department-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+  text-align: center; /* Centers text inside the items */
+  align-items: center; /* Centers items horizontally */
+  justify-content: center; /* Centers items vertically */
+}
+
+.department-list .department-btn {
+  text-align: center;
+  width: 100%; /* or use `max-width` if you want to control width */
+}
+
+/* Table */
+.table-section h3 {
+  text-align: center;
+  font-size: 18px;
+  color: white;
+  margin-bottom: 10px;
+}
+
+table {
+  width: 90%;
+  max-width: 800px;
+  margin: 0 auto;
+  border-collapse: collapse;
+  font-size: 14px;
+  background-color: white;
+  border: 2px solid #000;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+th, td {
+  padding: 6px 10px;
+  border: 1px solid #444;
+  text-align: left;
+}
+
+th {
+  background-color: #590663;
+  color: white;
+  font-weight: bold;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* Footer */
+.footer {
+  background-color: #2e003e;
+  color: white;
+  text-align: center;
+  padding: 15px;
+  margin-top: 40px;
+  font-size: 13px;
+  border-top: 2px solid #590663;
+}
+
+.footer a {
+  color: #a55af5;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
+.footer p {
+  margin: 5px 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .logo-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  table {
+    width: 100%;
+    font-size: 12px;
+  }
+
+  .login-buttons a {
+    width: 100%;
+    max-width: 200px;
+  }
+}

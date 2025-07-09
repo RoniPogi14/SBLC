@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if page_type == 'my_requests' %}My Requests
+    {% elif page_type == 'pending_approvals' %}Pending Approvals
+    {% elif page_type == 'all_requests' %}All Requests
+    {% endif %} - Document Request System
+{% endblock %}
+
+{% block content %}
+<div class="request-container">
+    <div class="section-header">
+        {% if page_type == 'my_requests' %}
+            <h2>My Requests
+                {% if session.user_role == 'approver' %}
+                    <small style="font-size: 14px; color: #666; font-weight: normal;">
+                        (Requests I Created)
+                    </small>
+                {% endif %}
+            </h2>
+            <a href="{{ url_for('new_request') }}">
+                <button class="new-request-btn">New Request</button>
+            </a>
+        {% elif page_type == 'pending_approvals' %}
+            <h2>Pending Approvals for {{ session.user_department }}</h2>
+        {% elif page_type == 'all_requests' %}
+            <h2>All Requests</h2>
+        {% endif %}
+    </div>
+
+    <!-- Status Filter Tabs -->
+    {% if page_type == 'my_requests' %}
+        <div class="tabs">
+            <button class="tab active" data-status="all">All</button>
+            <button class="tab" data-status="draft">Drafts</button>
+            <button class="tab" data-status="pending">Pending</button>
+            <button class="tab" data-status="approved">Approved</button>
+            <button class="tab" data-status="completed">Completed</button>
+        </div>
+    {% elif page_type == 'pending_approvals' %}
+        <div class="tabs">
+            <button class="tab active" data-status="pending">Pending</button>
+            <button class="tab" data-status="urgent">Urgent</button>
+        </div>
+    {% endif %}
+
+    <!-- Requests Table -->
+    <table class="request-table" id="requestsTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                {% if page_type != 'my_requests' %}<th>Requester</th>{% endif %}
+                <th>Status</th>
+                <th>Created Date</th>
+                <th>Deadline</th>
+                {% if page_type == 'my_requests' %}<th>Assigned To</th>{% endif %}
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for req in requests %}
+            <tr data-status="{{ req[3].lower() }}" data-urgent="{{ req[7] }}">
+                <td>{{ req[0] }}</td>
+                <td>
+                    {{ req[1] }}
+                    {% if req[7] %}<span class="urgent">(Urgent)</span>{% endif %}
+                </td>
+                {% if page_type != 'my_requests' %}
+                    <td>{{ req[-1] if req|length > 8 else 'N/A' }}</td>
+                {% endif %}
+                <td>
+                    <span class="status {{ req[3].lower() }}">{{ req[3] }}</span>
+                </td>
+                <td>{{ req[5].strftime('%b %d, %Y') if req[5] else 'N/A' }}</td>
+                <td class="deadline">
+                    {{ req[6].strftime('%b %d, %Y') if req[6] else '-' }}
+                </td>
+                {% if page_type == 'my_requests' %}
+                    <td>{{ req[4] or '-' }}</td>
+                {% endif %}
+                <td>
+                    <a href="{{ url_for('view_request', request_id=req[0]) }}">
+                        <button class="view-btn">View</button>
+                    </a>
+                    {% if page_type == 'pending_approvals' and session.user_role == 'approver' %}
+                        <button class="approve-btn" onclick="approveRequest({{ req[0] }})">Approve</button>
+                        <button class="reject-btn" onclick="rejectRequest({{ req[0] }})">Reject</button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if not requests %}
+    <div class="no-requests">
+        {% if page_type == 'my_requests' %}
+            <p>You haven't made any requests yet.</p>
+            <a href="{{ url_for('new_request') }}">
+                <button class="cta-btn">Create Your First Request</button>
+            </a>
+        {% elif page_type == 'pending_approvals' %}
+            <p>No pending approvals for {{ session.user_department }} department.</p>
+        {% elif page_type == 'all_requests' %}
+            <p>No requests found.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Tab filtering functionality
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        
+        const status = this.dataset.status;
+        const rows = document.querySelectorAll('#requestsTable tbody tr');
+        
+        rows.forEach(row => {
+            if (status === 'all') {
+                row.style.display = '';
+            } else if (status === 'urgent') {
+                row.style.display = row.dataset.urgent === 'True' ? '' : 'none';
+            } else {
+                row.style.display = row.dataset.status === status ? '' : 'none';
+            }
+        });
+    });
+});
+
+// Approval functions
+function approveRequest(requestId) {
+    if (confirm('Are you sure you want to approve this request?')) {
+        window.location.href = `/requests/${requestId}/approve`;
+    }
+}
+
+function rejectRequest(requestId) {
+    const reason = prompt('Please provide a reason for rejection:');
+    if (reason) {
+        window.location.href = `/requests/${requestId}/reject?reason=${encodeURIComponent(reason)}`;
+    }
+}
+</script>
+{% endblock %}

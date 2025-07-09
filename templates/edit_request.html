@@ -1,0 +1,422 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Request #{{ request[0] }} - Document Request System{% endblock %}
+
+{% block content %}
+<div class="form-wrapper">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>Edit Request #{{ request[0] }}</h2>
+        <div>
+            <span class="status-badge status-{{ request[3].lower().replace(' ', '-') }}">{{ request[3] }}</span>
+            {% if request[7] %}<span class="urgent-badge">URGENT</span>{% endif %}
+        </div>
+    </div>
+    
+    {% if request[3].lower() == 'completed' %}
+    <div class="alert alert-info">
+        <strong>ℹ️ Information:</strong> This request has been completed and cannot be edited anymore.
+        <div style="margin-top: 10px;">
+            <a href="{{ url_for('view_request', request_id=request[0]) }}" class="btn btn-primary">View Request Details</a>
+        </div>
+    </div>
+    {% else %}
+    
+    <form method="POST" enctype="multipart/form-data" class="request-form">
+        <div class="form-group">
+            <label for="title">Request Title <span>*</span></label>
+            <input type="text" id="title" name="title" class="form-control" 
+                   value="{{ request[1] }}" placeholder="Enter request title" required />
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description <span>*</span></label>
+            <textarea id="description" name="description" class="form-control" 
+                      placeholder="Enter detailed description of your request" required>{{ request[2] }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Assign To Departments <span>*</span></label>
+            <div class="department-checklist">
+                {% set assigned_departments = request[4].split(',') if request[4] else [] %}
+                {% for dept in departments %}
+                <div class="checkbox-group">
+                    <input type="checkbox" id="dept_{{ loop.index }}" name="assigned_to" value="{{ dept }}" 
+                           {% if dept in assigned_departments %}checked{% endif %} />
+                    <label for="dept_{{ loop.index }}">{{ dept }}</label>
+                </div>
+                {% endfor %}
+                <div class="checkbox-group">
+                    <input type="checkbox" id="dept_all" name="assigned_to" value="All Departments" 
+                           {% if 'All Departments' in assigned_departments %}checked{% endif %} />
+                    <label for="dept_all">All Departments</label>
+                </div>
+            </div>
+            <small class="form-help">Select which departments should handle this request. You can choose multiple departments.</small>
+            <div id="department-error" class="validation-error" style="display: none;">
+                Please select at least one department.
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="deadline">Deadline <span>*</span></label>
+            <input type="date" id="deadline" name="deadline" class="form-control" 
+                   value="{{ request[6].strftime('%Y-%m-%d') if request[6] else '' }}" required />
+            <small class="form-help">Please set a deadline for when this request needs to be processed.</small>
+        </div>
+
+        <div class="form-group">
+            <div class="checkbox-group">
+                <input type="checkbox" id="urgent" name="urgent" {% if request[7] %}checked{% endif %} />
+                <label for="urgent">Mark as Urgent</label>
+            </div>
+            <small class="form-help">Check this if the request needs immediate attention.</small>
+        </div>
+
+        <div class="form-group">
+            <label for="files">Add More Documents (Optional)</label>
+            <input type="file" id="files" name="files" class="form-control" multiple 
+                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" />
+            <small class="form-help">Upload additional supporting documents. Accepted formats: PDF, DOC, DOCX, JPG, PNG</small>
+        </div>
+
+        <!-- Show existing documents if any -->
+        {% if documents %}
+        <div class="form-group">
+            <label>Current Documents ({{ documents|length }})</label>
+            <div class="existing-documents">
+                {% for doc in documents %}
+                <div class="document-item">
+                    <div class="document-info">
+                        <strong>{{ doc[2] }}</strong>
+                        <small>Uploaded: {{ doc[4].strftime('%b %d, %Y') if doc[4] else 'Unknown' }}</small>
+                        {% if doc[5] %}<span class="document-badge">Initial</span>{% endif %}
+                    </div>
+                    <div class="document-actions">
+                        <a href="{{ url_for('download_document', doc_id=doc[0]) }}" class="btn-download">📥 Download</a>
+                        <button type="button" class="btn-remove" onclick="removeDocument({{ doc[0] }})">🗑️ Remove</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="status">Request Status</label>
+            <select id="status" name="status" class="form-control">
+                <option value="draft" {% if request[3].lower() == 'draft' %}selected{% endif %}>Draft</option>
+                <option value="pending" {% if request[3].lower() == 'pending' %}selected{% endif %}>Submit for Approval</option>
+                {% if request[3].lower() not in ['draft', 'pending'] %}
+                <option value="{{ request[3].lower() }}" selected>{{ request[3] }} (Current)</option>
+                {% endif %}
+            </select>
+            <small class="form-help">
+                {% if request[3].lower() == 'draft' %}
+                    You can save as draft or submit for approval.
+                {% elif request[3].lower() == 'pending' %}
+                    Request is currently under review. You can still make changes.
+                {% else %}
+                    Request status: {{ request[3] }}. Limited editing available.
+                {% endif %}
+            </small>
+        </div>
+
+        <div class="button-group">
+            <a href="{{ url_for('view_request', request_id=request[0]) }}" class="btn btn-secondary">
+                Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+                💾 Save Changes
+            </button>
+            {% if request[3].lower() == 'draft' %}
+            <button type="submit" name="status" value="pending" class="btn btn-success">
+                📤 Save & Submit
+            </button>
+            {% endif %}
+        </div>
+    </form>
+    
+    {% endif %}
+</div>
+
+<style>
+.department-checklist {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    margin-top: 5px;
+}
+
+.department-checklist .checkbox-group {
+    margin-bottom: 10px;
+    padding: 5px 0;
+}
+
+.department-checklist .checkbox-group:last-child {
+    margin-bottom: 0;
+    border-top: 1px solid #dee2e6;
+    margin-top: 15px;
+    padding-top: 15px;
+}
+
+.department-checklist input[type="checkbox"] {
+    margin-right: 10px;
+    transform: scale(1.2);
+}
+
+.department-checklist label {
+    font-weight: 500;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.department-checklist label:hover {
+    background-color: #e9ecef;
+}
+
+.department-checklist .checkbox-group:last-child label {
+    font-weight: bold;
+    color: #1a1054;
+}
+
+.validation-error {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+    padding: 5px 10px;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status-draft { background-color: #e1dfff; color: #4a3cb6; }
+.status-pending { background-color: #fff3cd; color: #856404; }
+.status-approved { background-color: #d1ecf1; color: #0c5460; }
+.status-completed { background-color: #d4edda; color: #155724; }
+.status-rejected { background-color: #f8d7da; color: #721c24; }
+
+.urgent-badge {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+.existing-documents {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 5px;
+}
+
+.document-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.document-item:last-child {
+    border-bottom: none;
+}
+
+.document-info strong {
+    display: block;
+    color: #1a1054;
+    margin-bottom: 4px;
+}
+
+.document-info small {
+    color: #666;
+    font-size: 12px;
+}
+
+.document-badge {
+    background-color: #17a2b8;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+    margin-left: 8px;
+}
+
+.document-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-download, .btn-remove {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.btn-download {
+    background: #1a1054;
+    color: white;
+}
+
+.btn-download:hover {
+    background: #0f0838;
+}
+
+.btn-remove {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-remove:hover {
+    background: #c82333;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #218838, #1e7e34);
+}
+
+.alert {
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #17a2b8;
+    color: #0c5460;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Set minimum date to today for deadline
+    document.getElementById('deadline').min = new Date().toISOString().split('T')[0];
+    
+    // Handle "All Departments" checkbox
+    const allDeptCheckbox = document.getElementById('dept_all');
+    const individualDeptCheckboxes = document.querySelectorAll('input[name="assigned_to"]:not(#dept_all)');
+    
+    allDeptCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            individualDeptCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.disabled = true;
+            });
+        } else {
+            individualDeptCheckboxes.forEach(checkbox => {
+                checkbox.disabled = false;
+            });
+        }
+        clearValidationError();
+    });
+    
+    individualDeptCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            if (this.checked && allDeptCheckbox.checked) {
+                allDeptCheckbox.checked = false;
+                individualDeptCheckboxes.forEach(cb => {
+                    cb.disabled = false;
+                });
+            }
+            clearValidationError();
+        });
+    });
+    
+    // Initialize checkbox states on page load
+    if (allDeptCheckbox.checked) {
+        individualDeptCheckboxes.forEach(checkbox => {
+            checkbox.disabled = true;
+        });
+    }
+    
+    function clearValidationError() {
+        document.getElementById('department-error').style.display = 'none';
+    }
+    
+    // Form validation
+    document.querySelector('.request-form').addEventListener('submit', function(e) {
+        const deadline = new Date(document.getElementById('deadline').value);
+        const today = new Date();
+        
+        if (deadline < today) {
+            e.preventDefault();
+            alert('Deadline cannot be in the past.');
+            return false;
+        }
+        
+        // Check if at least one department is selected
+        const selectedDepartments = document.querySelectorAll('input[name="assigned_to"]:checked');
+        if (selectedDepartments.length === 0) {
+            e.preventDefault();
+            document.getElementById('department-error').style.display = 'block';
+            document.querySelector('.department-checklist').scrollIntoView({ behavior: 'smooth' });
+            return false;
+        }
+        
+        // Show loading state
+        const submitBtns = document.querySelectorAll('button[type="submit"]');
+        submitBtns.forEach(btn => {
+            btn.disabled = true;
+            const originalText = btn.textContent;
+            btn.textContent = 'Saving...';
+        });
+    });
+    
+    // Remove document function
+    function removeDocument(docId) {
+        if (confirm('Are you sure you want to remove this document? This action cannot be undone.')) {
+            // Create a form to submit the removal request
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ url_for("remove_document", request_id=request[0]) }}';
+            
+            const docInput = document.createElement('input');
+            docInput.type = 'hidden';
+            docInput.name = 'document_id';
+            docInput.value = docId;
+            
+            form.appendChild(docInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+    
+    // Auto-resize textarea
+    document.getElementById('description').addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = this.scrollHeight + 'px';
+    });
+    
+    // Initialize textarea height
+    const textarea = document.getElementById('description');
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+</script>
+{% endblock %}

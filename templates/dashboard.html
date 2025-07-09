@@ -1,0 +1,803 @@
+{% extends "base.html" %}
+
+{% block title %}{{ session.user_role|title }} Dashboard - Document Request System{% endblock %}
+
+{% block content %}
+<div class="dashboard-card">
+    <h2>{{ session.user_role|title }} Dashboard</h2>
+    <hr />
+    
+    <!-- Role-specific overview boxes -->
+    {% if session.user_role == 'requestor' %}
+        <div class="overview-boxes">
+            <div class="box draft">
+                <h1>{{ counts[0] or 0 }}</h1>
+                <p>Draft Requests</p>
+            </div>
+            <div class="box pending">
+                <h1>{{ counts[1] or 0 }}</h1>
+                <p>Pending Requests</p>
+            </div>
+            <div class="box approved">
+                <h1>{{ counts[2] or 0 }}</h1>
+                <p>Approved Requests</p>
+            </div>
+        </div>
+        
+    {% elif session.user_role == 'approver' %}
+        <div class="overview-boxes">
+            <div class="box pending">
+                <h1>{{ pending_count or 0 }}</h1>
+                <p>Pending Approvals</p>
+                <small>for {{ session.user_department }}</small>
+            </div>
+            <div class="box draft">
+                <h1>{{ counts[0] or 0 }}</h1>
+                <p>My Draft Requests</p>
+            </div>
+            <div class="box info">
+                <h1>{{ counts[1] or 0 }}</h1>
+                <p>My Pending Requests</p>
+            </div>
+        </div>
+        
+    {% elif session.user_role == 'admin' %}
+        <div class="overview-boxes">
+            <div class="box total">
+                <h1>{{ counts[2] or 0 }}</h1>
+                <p>Total Requests</p>
+            </div>
+            <div class="box pending">
+                <h1>{{ counts[0] or 0 }}</h1>
+                <p>Pending Requests</p>
+            </div>
+            <div class="box approved">
+                <h1>{{ counts[1] or 0 }}</h1>
+                <p>Approved Requests</p>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Dynamic Recent Requests Section -->
+    <div class="recent-requests">
+        {% if session.user_role == 'requestor' %}
+            <h2>My Recent Requests</h2>
+        {% elif session.user_role == 'approver' %}
+            <h2>Recent Activity (Approvals & My Requests)</h2>
+        {% elif session.user_role == 'admin' %}
+            <h2>All Recent Requests</h2>
+        {% endif %}
+
+        {% if requests %}
+            <table class="request-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        {% if session.user_role != 'requestor' %}<th>Requester</th>{% endif %}
+                        <th>Status</th>
+                        <th>Created Date</th>
+                        <th>Deadline</th>
+                        {% if session.user_role == 'requestor' %}<th>Assigned To</th>{% endif %}
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                    <tr>
+                        <td>{{ req[0] }}</td>
+                        <td>
+                            {{ req[1] }}
+                            {% if req[7] %}<span class="urgent">(Urgent)</span>{% endif %}
+                        </td>
+                        {% if session.user_role != 'requestor' %}
+                            <td>{{ req[-1] if req|length > 8 else 'N/A' }}</td>
+                        {% endif %}
+                        <td>
+                            <span class="status {{ req[3].lower() }}">
+                                {{ req[3] }}
+                            </span>
+                        </td>
+                        <td>{{ req[5].strftime('%b %d, %Y') if req[5] else 'N/A' }}</td>
+                        <td class="deadline">
+                            {{ req[6].strftime('%b %d, %Y') if req[6] else '-' }}
+                        </td>
+                        {% if session.user_role == 'requestor' %}
+                            <td>
+                                {% if req[4] %}
+                                    {% set departments = req[4].split(',') %}
+                                    {% for dept in departments %}
+                                        <span class="department-tag">{{ dept.strip() }}</span>{% if not loop.last %}<br>{% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        {% endif %}
+                        <td class="action-buttons-cell">
+                            <a href="{{ url_for('view_request', request_id=req[0]) }}">
+                                <button class="view-btn">👁️ View</button>
+                            </a>
+                            
+                            {% if session.user_role in ['requestor', 'approver'] and req[3].lower() != 'completed' %}
+                                <a href="{{ url_for('edit_request', request_id=req[0]) }}">
+                                    <button class="edit-btn-small">✏️ Edit</button>
+                                </a>
+                            {% endif %}
+                            
+                            <!-- Submit Button for Draft Requests -->
+                            {% if req[3].lower() == 'draft' and session.user_role in ['requestor', 'approver'] %}
+                                <form method="POST" action="{{ url_for('submit_request', request_id=req[0]) }}" 
+                                      style="display: inline;" 
+                                      onsubmit="return confirm('Are you sure you want to submit this request for approval? Once submitted, it will be sent to the assigned department(s) for review.')">
+                                    <button type="submit" class="submit-btn-small" title="Submit for Approval">
+                                        📤 Submit
+                                    </button>
+                                </form>
+                            {% endif %}
+                            
+                            <!-- Approve/Reject Buttons for Pending Requests -->
+                            {% if session.user_role == 'approver' and req[3].lower() == 'pending' %}
+                                <button class="approve-btn-small" onclick="approveRequest({{ req[0] }})" title="Go to approval page">
+                                    ✅ Approve
+                                </button>
+                                <button class="reject-btn-small" onclick="rejectRequest({{ req[0] }})" title="Go to rejection page">
+                                    ❌ Reject
+                                </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="no-requests">
+                {% if session.user_role == 'requestor' %}
+                    <p>You haven't made any requests yet.</p>
+                    <a href="{{ url_for('new_request') }}">
+                        <button class="cta-btn">Create Your First Request</button>
+                    </a>
+                {% elif session.user_role == 'approver' %}
+                    <p>No recent activity. You can create requests or check pending approvals.</p>
+                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+                        <a href="{{ url_for('new_request') }}">
+                            <button class="cta-btn">Create Request</button>
+                        </a>
+                        <a href="{{ url_for('pending_approvals') }}">
+                            <button class="manage-btn">Check Approvals</button>
+                        </a>
+                    </div>
+                {% elif session.user_role == 'admin' %}
+                    <p>No requests in the system yet.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <!-- Role-specific action buttons -->
+        {% if session.user_role == 'requestor' %}
+            <div class="action-buttons">
+                <a href="{{ url_for('new_request') }}">
+                    <button class="new-request-btn">➕ New Request</button>
+                </a>
+                <a href="{{ url_for('my_requests') }}">
+                    <button class="view-all-btn">📄 View All My Requests</button>
+                </a>
+            </div>
+        {% elif session.user_role == 'approver' %}
+            <div class="action-buttons">
+                <a href="{{ url_for('new_request') }}">
+                    <button class="new-request-btn">➕ New Request</button>
+                </a>
+                <a href="{{ url_for('my_requests') }}">
+                    <button class="view-all-btn">📄 My Requests</button>
+                </a>
+                <a href="{{ url_for('pending_approvals') }}">
+                    <button class="manage-btn">⏳ Pending Approvals</button>
+                </a>
+            </div>
+        {% elif session.user_role == 'admin' %}
+            <div class="action-buttons">
+                <a href="{{ url_for('all_requests') }}">
+                    <button class="view-all-btn">📋 View All Requests</button>
+                </a>
+                <a href="{{ url_for('user_management') }}">
+                    <button class="manage-btn">👥 Manage Users</button>
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Submit Status Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-messages-overlay" id="flashMessages">
+            {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">
+                    <span class="flash-icon">
+                        {% if category == 'success' %}✅{% elif category == 'error' %}❌{% elif category == 'warning' %}⚠️{% else %}ℹ️{% endif %}
+                    </span>
+                    {{ message }}
+                    <button onclick="closeFlashMessage()" class="close-flash">&times;</button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.department-tag {
+    display: inline-block;
+    background: linear-gradient(135deg, #1a1054, #0f0838);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: bold;
+    margin-right: 3px;
+    margin-bottom: 2px;
+}
+
+/* Action Buttons Cell Styling */
+.action-buttons-cell {
+    white-space: nowrap;
+    padding: 8px;
+}
+
+.action-buttons-cell button,
+.action-buttons-cell a button {
+    margin: 2px;
+    vertical-align: middle;
+}
+
+/* Button Styles */
+.view-btn {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+    padding: 6px 12px;
+    font-size: 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.view-btn:hover {
+    background: linear-gradient(135deg, #5a6268, #343a40);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+}
+
+.edit-btn-small {
+    background-color: #f0c240;
+    color: #1a1054;
+    padding: 6px 12px;
+    font-size: 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.edit-btn-small:hover {
+    background-color: #ffd369;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(240, 194, 64, 0.3);
+}
+
+/* Submit Button Styling */
+.submit-btn-small {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    padding: 6px 12px;
+    font-size: 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+}
+
+.submit-btn-small:hover {
+    background: linear-gradient(135deg, #218838, #1e7e34);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.submit-btn-small:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+}
+
+/* Approve and Reject Button Styles */
+.approve-btn-small {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    padding: 6px 12px;
+    font-size: 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+}
+
+.approve-btn-small:hover {
+    background: linear-gradient(135deg, #218838, #1e7e34);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.reject-btn-small {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    padding: 6px 12px;
+    font-size: 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
+}
+
+.reject-btn-small:hover {
+    background: linear-gradient(135deg, #c82333, #a71e2a);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* Action Button Styles */
+.manage-btn {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.manage-btn:hover {
+    background: linear-gradient(135deg, #138496, #0f6674);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(23, 162, 184, 0.3);
+}
+
+.new-request-btn {
+    background: linear-gradient(135deg, #f0c240, #ffd369);
+    color: #1a1054;
+    font-weight: bold;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.new-request-btn:hover {
+    background: linear-gradient(135deg, #ffd369, #ffe082);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(240, 194, 64, 0.3);
+}
+
+.view-all-btn {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.view-all-btn:hover {
+    background: linear-gradient(135deg, #5a6268, #343a40);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(108, 117, 125, 0.3);
+}
+
+.cta-btn {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.cta-btn:hover {
+    background: linear-gradient(135deg, #0056b3, #004085);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 123, 255, 0.3);
+}
+
+/* Enhanced Flash Messages */
+.flash-messages-overlay {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 1000;
+    max-width: 400px;
+}
+
+.flash-message {
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: slideInRight 0.3s ease-out;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.flash-message.flash-success {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.flash-message.flash-error {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.flash-message.flash-warning {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    border: 1px solid #ffeaa7;
+    color: #856404;
+}
+
+.flash-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.close-flash {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    opacity: 0.7;
+    color: inherit;
+}
+
+.close-flash:hover {
+    opacity: 1;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Status Badge Colors */
+.status.draft {
+    background-color: #e1dfff;
+    color: #4a3cb6;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status.pending {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status.approved {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status.completed {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status.rejected {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* Urgent Badge Enhancement */
+.urgent {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: bold;
+    margin-left: 8px;
+    animation: urgentPulse 2s infinite;
+}
+
+@keyframes urgentPulse {
+    0%, 100% { 
+        transform: scale(1); 
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); 
+    }
+    50% { 
+        transform: scale(1.05); 
+        box-shadow: 0 0 0 5px rgba(220, 53, 69, 0); 
+    }
+}
+
+/* Button Loading State */
+.submit-btn-small.loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+    position: relative;
+}
+
+.submit-btn-small.loading::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    top: 50%;
+    left: 50%;
+    margin-left: -6px;
+    margin-top: -6px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Table Improvements */
+.request-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.request-table th {
+    background: linear-gradient(135deg, #1a1054, #0f0838);
+    color: white;
+    padding: 12px 8px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.request-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+}
+
+.request-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .action-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .flash-messages-overlay {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+    
+    .request-table {
+        font-size: 11px;
+    }
+    
+    .action-buttons-cell button {
+        padding: 4px 8px;
+        font-size: 10px;
+        margin: 1px;
+    }
+    
+    .request-table th,
+    .request-table td {
+        padding: 6px 4px;
+    }
+    
+    .overview-boxes {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .action-buttons-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .action-buttons-cell button,
+    .action-buttons-cell a {
+        width: 100%;
+    }
+    
+    .action-buttons-cell button {
+        margin: 0;
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// FIXED: Approval functions for dashboard - Redirects to view page for proper workflow
+function approveRequest(requestId) {
+    // Redirect to the request view page where they can properly approve with signature
+    window.location.href = `/requests/${requestId}`;
+}
+
+function rejectRequest(requestId) {
+    // Redirect to the request view page where they can properly reject with reason
+    window.location.href = `/requests/${requestId}`;
+}
+
+// Enhanced submit functionality with loading state
+document.addEventListener('DOMContentLoaded', function() {
+    // Add loading state to submit buttons
+    const submitForms = document.querySelectorAll('form[action*="/submit"]');
+    submitForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const submitBtn = this.querySelector('.submit-btn-small');
+            if (submitBtn) {
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Submitting...';
+                
+                // Reset button after timeout to prevent permanent disabled state
+                setTimeout(() => {
+                    if (submitBtn) {
+                        submitBtn.classList.remove('loading');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '📤 Submit';
+                    }
+                }, 5000);
+            }
+        });
+    });
+    
+    // Add hover tooltips for better UX
+    const approveButtons = document.querySelectorAll('.approve-btn-small');
+    approveButtons.forEach(btn => {
+        btn.addEventListener('mouseenter', function() {
+            this.setAttribute('title', 'Click to go to the approval page with digital signature');
+        });
+    });
+    
+    const rejectButtons = document.querySelectorAll('.reject-btn-small');
+    rejectButtons.forEach(btn => {
+        btn.addEventListener('mouseenter', function() {
+            this.setAttribute('title', 'Click to go to the rejection page with reason');
+        });
+    });
+});
+
+// Flash message close functionality
+function closeFlashMessage() {
+    const flashContainer = document.getElementById('flashMessages');
+    if (flashContainer) {
+        flashContainer.style.animation = 'slideOutRight 0.3s ease-in';
+        setTimeout(() => {
+            flashContainer.remove();
+        }, 300);
+    }
+}
+
+// Auto-hide flash messages after 7 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    const flashContainer = document.getElementById('flashMessages');
+    if (flashContainer) {
+        setTimeout(() => {
+            closeFlashMessage();
+        }, 7000);
+    }
+});
+
+// Add CSS animation for slide out
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// Add success feedback for form submissions
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if there's a success message and show celebration
+    const successMessages = document.querySelectorAll('.flash-message.flash-success');
+    successMessages.forEach(msg => {
+        // Add a subtle celebration effect
+        msg.style.animation = 'slideInRight 0.3s ease-out, celebrate 0.5s ease-in-out 0.3s';
+    });
+});
+
+// Add celebrate animation
+const celebrateStyle = document.createElement('style');
+celebrateStyle.textContent = `
+    @keyframes celebrate {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+`;
+document.head.appendChild(celebrateStyle);
+</script>
+{% endblock %}

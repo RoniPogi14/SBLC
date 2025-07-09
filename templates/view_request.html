@@ -1,0 +1,1783 @@
+{% extends "base.html" %}
+
+{% block title %}Request #{{ request[0] }} - {{ request[1] }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Enhanced Request View with Integrated E-Signature */
+.request-container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 1200px;
+    margin: 20px auto;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0c240;
+}
+
+.request-header h1 {
+    color: #1a1054;
+    font-size: 24px;
+    margin: 0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.back-btn, .new-request-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.back-btn {
+    background-color: #6c757d;
+    color: white;
+}
+
+.back-btn:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+}
+
+.new-request-btn {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.new-request-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+/* SIGNING PROGRESS CONTAINER */
+.signing-progress-container {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 30px;
+    border: 2px solid #dee2e6;
+    position: relative;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.progress-title {
+    color: #1a1054;
+    font-size: 20px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.progress-summary {
+    background: white;
+    padding: 10px 20px;
+    border-radius: 25px;
+    border: 2px solid #dee2e6;
+    font-weight: 600;
+    color: #666;
+}
+
+/* Progress Timeline */
+.signing-timeline {
+    position: relative;
+    margin: 20px 0;
+}
+
+.timeline-line {
+    position: absolute;
+    top: 25px;
+    left: 25px;
+    right: 25px;
+    height: 4px;
+    background: #dee2e6;
+    border-radius: 2px;
+}
+
+.timeline-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #20c997);
+    border-radius: 2px;
+    transition: width 0.8s ease;
+}
+
+.timeline-steps {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+}
+
+.timeline-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: white;
+    min-width: 120px;
+}
+
+.step-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+}
+
+.step-circle.pending {
+    background: #fff;
+    border: 3px solid #dee2e6;
+    color: #666;
+}
+
+.step-circle.current {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    border: 3px solid #ffc107;
+    color: white;
+    animation: pulse 2s infinite;
+}
+
+.step-circle.completed {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border: 3px solid #28a745;
+    color: white;
+}
+
+.step-circle.rejected {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    border: 3px solid #dc3545;
+    color: white;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
+    50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+}
+
+.step-info {
+    text-align: center;
+}
+
+.step-title {
+    font-weight: bold;
+    color: #333;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.step-subtitle {
+    color: #666;
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.step-timestamp {
+    color: #28a745;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.step-timestamp.pending {
+    color: #666;
+}
+
+/* Signatories List */
+.signatories-list {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+    border: 1px solid #dee2e6;
+}
+
+.signatories-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.signatories-title {
+    font-weight: bold;
+    color: #1a1054;
+    font-size: 16px;
+}
+
+.signatory-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.signatory-item:last-child {
+    border-bottom: none;
+}
+
+.signatory-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.signatory-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1a1054, #0f0838);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.signatory-details h4 {
+    margin: 0;
+    color: #333;
+    font-size: 14px;
+}
+
+.signatory-details small {
+    color: #666;
+    font-size: 12px;
+}
+
+.signatory-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.status-indicator.signed { background: #28a745; }
+.status-indicator.pending { background: #ffc107; }
+.status-indicator.current { background: #fd7e14; animation: blink 1.5s infinite; }
+.status-indicator.rejected { background: #dc3545; }
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.status-text {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 10px;
+}
+
+.status-text.signed { background: #d4edda; color: #155724; }
+.status-text.pending { background: #fff3cd; color: #856404; }
+.status-text.current { background: #ffeaa7; color: #fd7e14; }
+.status-text.rejected { background: #f8d7da; color: #721c24; }
+
+/* Request Details Grid */
+.request-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+    padding: 25px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 12px;
+    border-left: 4px solid #1a1054;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-label {
+    font-weight: bold;
+    color: #555;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.detail-value {
+    font-size: 16px;
+    color: #333;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status-draft { background-color: #e1dfff; color: #4a3cb6; }
+.status-pending { background-color: #fff3cd; color: #856404; }
+.status-in-progress { background-color: #ffeaa7; color: #fd7e14; }
+.status-approved { background-color: #d1ecf1; color: #0c5460; }
+.status-completed { background-color: #d4edda; color: #155724; }
+.status-rejected { background-color: #f8d7da; color: #721c24; }
+.status-partially-signed { background-color: #e7f3ff; color: #0066cc; }
+
+.urgent-badge {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: bold;
+    margin-left: 10px;
+    animation: urgentPulse 2s infinite;
+}
+
+@keyframes urgentPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.deadline-warning {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+/* Section Styling */
+.section {
+    margin-bottom: 30px;
+}
+
+.section-title {
+    color: #1a1054;
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #f0c240;
+}
+
+.description-box {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    line-height: 1.6;
+    border: 1px solid #dee2e6;
+}
+
+/* Documents Section */
+.documents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+}
+
+.document-card {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.document-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.document-info h4 {
+    margin: 0 0 8px 0;
+    color: #1a1054;
+    font-size: 16px;
+}
+
+.document-info small {
+    color: #666;
+    font-size: 12px;
+}
+
+.document-badge {
+    background-color: #17a2b8;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    margin-left: 10px;
+}
+
+.download-btn {
+    background: linear-gradient(135deg, #1a1054, #0f0838);
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.3s ease;
+}
+
+.download-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(26, 16, 84, 0.3);
+}
+
+/* INTEGRATED E-SIGNATURE SECTION */
+.signature-section {
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    border: 3px solid #28a745;
+    position: relative;
+}
+
+.signature-section::before {
+    content: "🖊️ Digital Signature Required";
+    position: absolute;
+    top: -15px;
+    left: 20px;
+    background: #28a745;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 16px;
+}
+
+.signature-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.signature-title {
+    color: #155724;
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.approval-status {
+    background: rgba(255, 255, 255, 0.8);
+    padding: 10px 20px;
+    border-radius: 25px;
+    border: 2px solid #28a745;
+    color: #155724;
+    font-weight: bold;
+}
+
+/* Signature Input Area */
+.signature-input-area {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    border: 2px dashed #28a745;
+    margin-bottom: 25px;
+    position: relative;
+}
+
+.signature-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.signature-tab {
+    padding: 10px 20px;
+    border: 2px solid #dee2e6;
+    border-radius: 20px;
+    background: #f8f9fa;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.signature-tab.active {
+    background: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.signature-tab:hover:not(.active) {
+    border-color: #28a745;
+    background: #e8f5e8;
+}
+
+/* Draw Signature Tab */
+.draw-signature-area {
+    text-align: center;
+}
+
+.signature-canvas {
+    width: 100%;
+    height: 200px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    background: white;
+    cursor: crosshair;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.signature-controls {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.control-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.control-btn.clear { background: #dc3545; color: white; }
+.control-btn.undo { background: #ffc107; color: #856404; }
+.control-btn.redo { background: #17a2b8; color: white; }
+
+.control-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Saved Signatures Tab */
+.saved-signatures-area {
+    display: none;
+}
+
+.saved-signatures-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.saved-signature-card {
+    background: #f8f9fa;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.saved-signature-card:hover {
+    border-color: #28a745;
+    transform: translateY(-2px);
+}
+
+.saved-signature-card.selected {
+    border-color: #28a745;
+    background: #e8f5e8;
+}
+
+.signature-preview {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: white;
+}
+
+.signature-name {
+    font-weight: bold;
+    color: #333;
+    font-size: 14px;
+}
+
+/* Comments Section */
+.approval-comments {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    margin-bottom: 25px;
+}
+
+.comments-label {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.comments-textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    resize: vertical;
+    transition: border-color 0.3s;
+}
+
+.comments-textarea:focus {
+    outline: none;
+    border-color: #28a745;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+}
+
+/* Action Buttons */
+.signature-actions {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 25px;
+}
+
+.action-btn {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 150px;
+    justify-content: center;
+}
+
+.approve-btn {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.approve-btn:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+.reject-btn {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+}
+
+.reject-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+}
+
+.action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Comments & Communication */
+.comments-section {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+    overflow: hidden;
+}
+
+.comments-header {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    padding: 20px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.comments-body {
+    padding: 20px;
+}
+
+.comment-form {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #1a1054;
+    box-shadow: 0 0 0 2px rgba(26, 16, 84, 0.1);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #1a1054, #0f0838);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(26, 16, 84, 0.3);
+}
+
+/* Status Messages */
+.status-message {
+    padding: 15px 20px;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: 600;
+    margin: 20px 0;
+}
+
+.status-success {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.status-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status-warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.validation-message {
+    color: #dc3545;
+    font-size: 14px;
+    margin-top: 10px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.signature-required {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1) !important;
+}
+
+/* Loading Animation */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .request-container {
+        margin: 10px;
+        padding: 20px;
+    }
+    
+    .request-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+    
+    .header-actions {
+        justify-content: center;
+    }
+    
+    .request-details-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .timeline-steps {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .timeline-line {
+        display: none;
+    }
+    
+    .signature-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .signature-controls {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .saved-signatures-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .signatories-list {
+        padding: 15px;
+    }
+    
+    .signatory-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="request-container">
+    <!-- Request Header -->
+    <div class="request-header">
+        <h1>Request #{{ request[0] }}: {{ request[1] }}</h1>
+        <div class="header-actions">
+            <a href="{{ url_for('dashboard') }}" class="back-btn">← Back</a>
+            {% if can_edit %}
+            <a href="{{ url_for('edit_request', request_id=request[0]) }}" class="edit-btn">
+                ✏️ Edit Request
+            </a>
+            {% endif %}
+            {% if session.user_role in ['requestor', 'approver', 'admin'] %}
+            <a href="{{ url_for('new_request') }}" class="new-request-btn">
+                ➕ New Request
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- SIGNING PROGRESS CONTAINER -->
+    <div class="signing-progress-container">
+        <div class="progress-header">
+            <h2 class="progress-title">📋 Signing Progress</h2>
+            <div class="progress-summary">
+                <span id="progressText">
+                    {% if request[3].lower() == 'completed' %}
+                        ✅ All {{ total_signers|default(1) }} signatures completed
+                    {% elif request[3].lower() == 'rejected' %}
+                        ❌ Request rejected
+                    {% elif request[3].lower() == 'pending' %}
+                        ⏳ {{ signed_count|default(0) }} of {{ total_signers|default(1) }} signed
+                        {% if signed_count and total_signers and signed_count >= (total_signers - 1) %}
+                            - Awaiting final admin approval
+                        {% endif %}
+                    {% else %}
+                        📝 Awaiting signatures ({{ total_signers|default(1) }} required)
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Progress Timeline -->
+        <div class="signing-timeline">
+            <div class="timeline-line">
+                <div class="timeline-progress" style="width: {{ progress_percentage|default(0) }}%;"></div>
+            </div>
+            <div class="timeline-steps">
+                <div class="timeline-step">
+                    <div class="step-circle {{ 'completed' if request[3].lower() != 'draft' else 'current' }}">
+                        {% if request[3].lower() != 'draft' %}✓{% else %}1{% endif %}
+                    </div>
+                    <div class="step-info">
+                        <div class="step-title">Request Created</div>
+                        <div class="step-subtitle">{{ request[-1] if request|length > 8 else 'Unknown' }}</div>
+                        <div class="step-timestamp">{{ request[5].strftime('%b %d, %Y') if request[5] else 'N/A' }}</div>
+                    </div>
+                </div>
+                
+                <div class="timeline-step">
+                    <div class="step-circle {{ 'completed' if request[3].lower() in ['approved', 'completed'] else ('current' if request[3].lower() in ['pending'] else 'pending') }}">
+                        {% if request[3].lower() in ['approved', 'completed'] %}✓{% elif request[3].lower() == 'pending' %}🖊️{% else %}2{% endif %}
+                    </div>
+                    <div class="step-info">
+                        <div class="step-title">Department Review</div>
+                        <div class="step-subtitle">{{ signed_count|default(0) }} of {{ (total_signers|default(1)) - 1 }} departments signed</div>
+                        <div class="step-timestamp {{ 'pending' if request[3].lower() not in ['approved', 'completed'] else '' }}">
+                            {% if signed_count > 0 %}
+                                In progress
+                            {% else %}
+                                Awaiting signatures
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="timeline-step">
+                    <div class="step-circle {{ 'completed' if request[3].lower() == 'completed' else ('rejected' if request[3].lower() == 'rejected' else ('current' if (signed_count|default(0)) >= ((total_signers|default(1)) - 1) and request[3].lower() != 'completed' else 'pending')) }}">
+                        {% if request[3].lower() == 'completed' %}✓{% elif request[3].lower() == 'rejected' %}✗{% elif (signed_count|default(0)) >= ((total_signers|default(1)) - 1) and request[3].lower() != 'completed' %}🔐{% else %}3{% endif %}
+                    </div>
+                    <div class="step-info">
+                        <div class="step-title">
+                            {% if request[3].lower() == 'completed' %}Completed{% elif request[3].lower() == 'rejected' %}Rejected{% else %}Admin Final Approval{% endif %}
+                        </div>
+                        <div class="step-subtitle">
+                            {% if request[3].lower() == 'completed' %}All signed{% elif request[3].lower() == 'rejected' %}Not approved{% elif (signed_count|default(0)) >= ((total_signers|default(1)) - 1) %}Awaiting Administrator{% else %}Pending department approvals{% endif %}
+                        </div>
+                        <div class="step-timestamp {{ 'pending' if request[3].lower() not in ['completed', 'rejected'] else '' }}">
+                            {% if request[3].lower() in ['completed', 'rejected'] %}
+                                {{ completion_date.strftime('%b %d, %Y') if completion_date else 'Recently' }}
+                            {% else %}
+                                Pending
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signatories List -->
+        <div class="signatories-list">
+            <div class="signatories-header">
+                <div class="signatories-title">Required Signatures</div>
+                <div style="font-size: 12px; color: #666;">
+                    {{ signed_count|default(0) }} of {{ total_signers|default(1) }} completed
+                </div>
+            </div>
+            
+            <!-- REAL APPROVAL DATA from backend -->
+            {% for signatory in signatories %}
+            <div class="signatory-item" data-signatory-id="{{ signatory.department }}">
+                <div class="signatory-info">
+                    <div class="signatory-avatar">
+                        {{ signatory.name[0] if signatory.name else signatory.department[0] }}
+                    </div>
+                    <div class="signatory-details">
+                        <h4>{{ signatory.role }}</h4>
+                        <small>{{ signatory.department }} Department</small>
+                    </div>
+                </div>
+                <div class="signatory-status">
+                    <div class="status-indicator {{ signatory.status }}"></div>
+                    <span class="status-text {{ signatory.status }}">
+                        {% if signatory.status == 'signed' %}
+                            ✅ Signed {{ signatory.signed_date if signatory.signed_date else 'recently' }}
+                        {% elif signatory.status == 'current' %}
+                            🖊️ {{ signatory.name }}
+                        {% elif signatory.status == 'rejected' %}
+                            ❌ Rejected
+                        {% else %}
+                            ⏳ {{ signatory.name }}
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+            
+            {% if not signatories %}
+                <div style="text-align: center; padding: 20px; color: #666;">
+                    <em>No approval workflow configured for this request.</em>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Request Details -->
+    <div class="request-details-grid">
+        <div class="detail-item">
+            <span class="detail-label">Status</span>
+            <span class="detail-value">
+                <span class="status-badge status-{{ request[3].lower().replace(' ', '-') }}">{{ request[3] }}</span>
+                {% if request[7] %}<span class="urgent-badge">URGENT</span>{% endif %}
+            </span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Created By</span>
+            <span class="detail-value">{{ request[-1] if request|length > 8 else 'Unknown' }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Created Date</span>
+            <span class="detail-value">{{ request[5].strftime('%B %d, %Y at %I:%M %p') if request[5] else 'N/A' }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Deadline</span>
+            <span class="detail-value deadline-warning">
+                {{ request[6].strftime('%B %d, %Y') if request[6] else 'No deadline set' }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Description Section -->
+    <div class="section">
+        <h2 class="section-title">Description</h2>
+        <div class="description-box">
+            {% if request[2] %}
+                {{ request[2]|replace('\n', '<br>')|safe }}
+            {% else %}
+                <em>No description provided.</em>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Documents Section -->
+    {% if documents %}
+    <div class="section">
+        <h2 class="section-title">Documents ({{ documents|length }})</h2>
+        <div class="documents-grid">
+            {% for doc in documents %}
+            <div class="document-card">
+                <div class="document-info">
+                    <h4>{{ doc[2] }}</h4>
+                    <small>Uploaded: {{ doc[4].strftime('%b %d, %Y at %I:%M %p') if doc[4] else 'Unknown' }}</small>
+                    {% if doc[5] %}<span class="document-badge">Initial</span>{% endif %}
+                </div>
+                <div class="document-actions">
+                    <a href="{{ url_for('download_document', doc_id=doc[0]) }}" class="download-btn">
+                        📥 Download
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- INTEGRATED E-SIGNATURE SECTION -->
+    <!-- Show for approvers, admins, or current signers -->
+    {% if (session.user_role in ['approver', 'admin']) and can_approve %}
+    <div class="signature-section">
+        <div class="signature-header">
+            <h2 class="signature-title">Digital Signature Required</h2>
+            <div class="approval-status">
+                {% if session.user_role == 'admin' %}
+                    🔐 Administrator Final Approval
+                {% elif approval_message %}
+                    {{ approval_message }}
+                {% else %}
+                    Ready for your signature
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- SHARED SIGNATURE INPUT AREA -->
+        <div id="sharedSignatureArea" style="display: none;">
+            <div class="signature-input-area">
+                <div class="signature-tabs">
+                    <div class="signature-tab active" onclick="switchTab('draw')">✏️ Draw Signature</div>
+                    <div class="signature-tab" onclick="switchTab('saved')">💾 Saved Signatures</div>
+                </div>
+
+                <!-- Draw Signature Tab -->
+                <div id="drawSignatureTab" class="draw-signature-area">
+                    <p style="margin-bottom: 15px; color: #666;">Draw your signature in the box below:</p>
+                    <canvas id="signatureCanvas" class="signature-canvas"></canvas>
+                    <div class="signature-controls">
+                        <button type="button" class="control-btn clear" onclick="clearSignature()">
+                            🗑️ Clear
+                        </button>
+                        <button type="button" class="control-btn undo" onclick="undoSignature()">
+                            ↶ Undo
+                        </button>
+                        <button type="button" class="control-btn redo" onclick="redoSignature()">
+                            ↷ Redo
+                        </button>
+                    </div>
+                    <div id="signatureValidation" class="validation-message" style="display: none;">
+                        Please provide a signature before proceeding
+                    </div>
+                </div>
+
+                <!-- Saved Signatures Tab -->
+                <div id="savedSignatureTab" class="saved-signatures-area">
+                    <div class="saved-signatures-grid" id="savedSignaturesGrid">
+                        <div class="saved-signature-card" onclick="selectSavedSignature(1, 'data:image/png;base64,sample')">
+                            <div class="signature-preview">
+                                <div style="font-style: italic; color: #666;">Formal Signature</div>
+                            </div>
+                            <div class="signature-name">Formal Signature</div>
+                        </div>
+                        <div class="saved-signature-card" onclick="selectSavedSignature(2, 'data:image/png;base64,sample2')">
+                            <div class="signature-preview">
+                                <div style="font-style: italic; color: #666;">Quick Signature</div>
+                            </div>
+                            <div class="signature-name">Quick Signature</div>
+                        </div>
+                    </div>
+                    <div style="text-align: center;">
+                        <a href="#" style="color: #28a745; text-decoration: none; font-weight: bold;">
+                            ⚙️ Manage My Signatures
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- APPROVAL FORM -->
+        <form id="approvalForm" method="POST" action="{{ url_for('approve_request', request_id=request[0]) }}" style="display: none;">
+            <input type="hidden" name="signature" id="approvalSignatureData">
+            <input type="hidden" name="signature_method" id="approvalSignatureMethod" value="drawn">
+            
+            <!-- Approval Comments -->
+            <div class="approval-comments">
+                <label class="comments-label">Comments (Optional)</label>
+                <textarea name="comment" id="approvalComment" class="comments-textarea" 
+                          placeholder="Add any comments about this approval..."></textarea>
+                
+                <!-- Quick Templates -->
+                <div style="margin-top: 15px;">
+                    <small style="color: #666; font-weight: 600;">Quick Templates:</small><br>
+                    <button type="button" onclick="insertTemplate('approvalComment', 'Reviewed and approved as per company policy.')" 
+                            style="margin: 5px; padding: 6px 12px; border: 1px solid #28a745; border-radius: 15px; background: #e8f5e8; color: #155724; font-size: 12px; cursor: pointer;">Standard Approval</button>
+                    <button type="button" onclick="insertTemplate('approvalComment', 'Approved with conditions - please ensure all requirements are met.')" 
+                            style="margin: 5px; padding: 6px 12px; border: 1px solid #f0c240; border-radius: 15px; background: #fff3cd; color: #856404; font-size: 12px; cursor: pointer;">Conditional</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- REJECTION FORM -->
+        <form id="rejectionForm" method="POST" action="{{ url_for('reject_request', request_id=request[0]) }}" style="display: none;">
+            <input type="hidden" name="signature" id="rejectionSignatureData">
+            <input type="hidden" name="signature_method" id="rejectionSignatureMethod" value="drawn">
+            
+            <!-- Rejection Comments -->
+            <div class="approval-comments">
+                <label class="comments-label">Reason for Rejection <span style="color: red;">*</span></label>
+                <textarea name="comment" id="rejectionComment" class="comments-textarea" 
+                          placeholder="Please provide a clear reason for rejecting this request..." required></textarea>
+                
+                <!-- Quick Templates for rejection -->
+                <div style="margin-top: 15px;">
+                    <small style="color: #666; font-weight: 600;">Quick Templates:</small><br>
+                    <button type="button" onclick="insertTemplate('rejectionComment', 'Request denied due to insufficient documentation.')" 
+                            style="margin: 5px; padding: 6px 12px; border: 1px solid #dc3545; border-radius: 15px; background: #f8d7da; color: #721c24; font-size: 12px; cursor: pointer;">Insufficient Info</button>
+                    <button type="button" onclick="insertTemplate('rejectionComment', 'Request does not meet company policy requirements.')" 
+                            style="margin: 5px; padding: 6px 12px; border: 1px solid #dc3545; border-radius: 15px; background: #f8d7da; color: #721c24; font-size: 12px; cursor: pointer;">Policy Issue</button>
+                    <button type="button" onclick="insertTemplate('rejectionComment', 'Budget constraints prevent approval at this time.')" 
+                            style="margin: 5px; padding: 6px 12px; border: 1px solid #dc3545; border-radius: 15px; background: #f8d7da; color: #721c24; font-size: 12px; cursor: pointer;">Budget</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Status Messages -->
+        <div id="statusMessages"></div>
+
+        <!-- Action Buttons -->
+        <div class="signature-actions" id="initialActions">
+            <button type="button" class="action-btn approve-btn" id="approveBtn" onclick="showApprovalForm()">
+                ✅ Approve & Sign
+            </button>
+            <button type="button" class="action-btn reject-btn" id="rejectBtn" onclick="showRejectionForm()">
+                ❌ Reject Request
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Comments & Communication -->
+    <div class="section">
+        <div class="comments-section">
+            <div class="comments-header">
+                <h2 class="section-title" style="margin: 0; border: none; padding: 0;">💬 Comments & Communication</h2>
+            </div>
+            <div class="comments-body">
+                <!-- Add Comment Form -->
+                <div class="comment-form">
+                    <h4>💬 Add a Comment</h4>
+                    <form method="POST" action="{{ url_for('view_request', request_id=request[0]) }}">
+                        <div class="form-group">
+                            <textarea name="comment" class="form-control" placeholder="Share updates, ask questions, or provide feedback..." required></textarea>
+                        </div>
+                        <button type="submit" name="action" value="add_comment" class="btn-primary">Send Comment</button>
+                    </form>
+                </div>
+
+                <!-- Comments List -->
+                {% if comments %}
+                    {% for comment in comments %}
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #eee;">
+                            <div>
+                                <span style="font-weight: bold; color: #1a1054;">{{ comment[4] if comment|length > 4 else 'Unknown User' }}</span>
+                                {% if comment|length > 5 %}
+                                <span style="color: #666;">({{ comment[5] }})</span>
+                                {% endif %}
+                            </div>
+                            <span style="color: #666; font-size: 12px;">{{ comment[3].strftime('%b %d, %Y at %I:%M %p') if comment[3] else 'Unknown date' }}</span>
+                        </div>
+                        <div style="line-height: 1.5; color: #333;">
+                            {{ comment[1]|replace('\n', '<br>')|safe if comment[1] else 'No content' }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <p style="text-align: center; color: #666; padding: 20px;"><em>No comments yet. Start the conversation!</em></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/1.5.3/signature_pad.min.js"></script>
+<script>
+    let signaturePad;
+    let signatureHistory = [];
+    let historyStep = -1;
+    let currentSignatureMethod = 'drawn';
+    let selectedSavedSignature = null;
+    let currentMode = 'selection'; // 'selection', 'approval', 'rejection'
+
+    // Initialize signature pad
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM Content Loaded'); // Debug log
+        initializeSignaturePad();
+        updateProgressAnimation();
+        
+        // Add click event listeners as backup
+        const approveBtn = document.getElementById('approveBtn');
+        const rejectBtn = document.getElementById('rejectBtn');
+        
+        if (approveBtn) {
+            approveBtn.addEventListener('click', function() {
+                console.log('Approve button clicked via event listener');
+                showApprovalForm();
+            });
+        }
+        
+        if (rejectBtn) {
+            rejectBtn.addEventListener('click', function() {
+                console.log('Reject button clicked via event listener');
+                showRejectionForm();
+            });
+        }
+    });
+
+    function initializeSignaturePad() {
+        const canvas = document.getElementById('signatureCanvas');
+        if (canvas && typeof SignaturePad !== 'undefined') {
+            signaturePad = new SignaturePad(canvas, {
+                backgroundColor: 'rgba(255, 255, 255, 1)',
+                penColor: 'rgb(0, 0, 0)',
+                minWidth: 2,
+                maxWidth: 4
+            });
+            
+            signaturePad.addEventListener('endStroke', function() {
+                saveSignatureState();
+                // Auto-update signature data when drawing
+                if (currentMode === 'approval' || currentMode === 'rejection') {
+                    updateSignatureData(signaturePad.toDataURL());
+                }
+            });
+            
+            resizeCanvas();
+            window.addEventListener("resize", resizeCanvas);
+        }
+    }
+
+    function updateProgressAnimation() {
+        // Animate progress bar on load
+        const progressBar = document.querySelector('.timeline-progress');
+        if (progressBar) {
+            const targetWidth = progressBar.style.width;
+            progressBar.style.width = '0%';
+            setTimeout(() => {
+                progressBar.style.width = targetWidth;
+            }, 500);
+        }
+    }
+
+    function resizeCanvas() {
+        const canvas = document.getElementById('signatureCanvas');
+        if (canvas && signaturePad) {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+        }
+    }
+
+    function switchTab(tabName) {
+        // Update tab appearance
+        document.querySelectorAll('.signature-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        if (tabName === 'draw') {
+            document.querySelector('.signature-tab:first-child').classList.add('active');
+            document.getElementById('drawSignatureTab').style.display = 'block';
+            document.getElementById('savedSignatureTab').style.display = 'none';
+            currentSignatureMethod = 'drawn';
+        } else {
+            document.querySelector('.signature-tab:last-child').classList.add('active');
+            document.getElementById('drawSignatureTab').style.display = 'none';
+            document.getElementById('savedSignatureTab').style.display = 'block';
+            currentSignatureMethod = 'saved';
+        }
+        
+        // Update signature method in both forms
+        const approvalSigMethod = document.getElementById('approvalSignatureMethod');
+        const rejectionSigMethod = document.getElementById('rejectionSignatureMethod');
+        
+        if (approvalSigMethod) approvalSigMethod.value = currentSignatureMethod;
+        if (rejectionSigMethod) rejectionSigMethod.value = currentSignatureMethod;
+    }
+
+    function clearSignature() {
+        if (signaturePad) {
+            signaturePad.clear();
+            signatureHistory = [];
+            historyStep = -1;
+            // Clear signature data from forms
+            updateSignatureData('');
+        }
+    }
+
+    function saveSignatureState() {
+        historyStep++;
+        if (historyStep < signatureHistory.length) {
+            signatureHistory.length = historyStep;
+        }
+        signatureHistory.push(signaturePad.toDataURL());
+    }
+
+    function undoSignature() {
+        if (historyStep > 0) {
+            historyStep--;
+            const imageData = signatureHistory[historyStep];
+            const img = new Image();
+            img.onload = function() {
+                signaturePad.clear();
+                signaturePad._ctx.drawImage(img, 0, 0);
+                // Update signature data after undo
+                if (currentMode === 'approval' || currentMode === 'rejection') {
+                    updateSignatureData(imageData);
+                }
+            };
+            img.src = imageData;
+        }
+    }
+
+    function redoSignature() {
+        if (historyStep < signatureHistory.length - 1) {
+            historyStep++;
+            const imageData = signatureHistory[historyStep];
+            const img = new Image();
+            img.onload = function() {
+                signaturePad.clear();
+                signaturePad._ctx.drawImage(img, 0, 0);
+                // Update signature data after redo
+                if (currentMode === 'approval' || currentMode === 'rejection') {
+                    updateSignatureData(imageData);
+                }
+            };
+            img.src = imageData;
+        }
+    }
+
+    function selectSavedSignature(signatureId, signatureData) {
+        // Remove previous selection
+        document.querySelectorAll('.saved-signature-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        
+        // Add selection
+        event.target.closest('.saved-signature-card').classList.add('selected');
+        
+        // Store signature data
+        selectedSavedSignature = { id: signatureId, data: signatureData };
+        
+        // Update both form signature inputs
+        updateSignatureData(signatureData);
+    }
+
+    function updateSignatureData(signatureData) {
+        // Update signature data in both forms
+        const approvalSigData = document.getElementById('approvalSignatureData');
+        const rejectionSigData = document.getElementById('rejectionSignatureData');
+        
+        if (approvalSigData) approvalSigData.value = signatureData;
+        if (rejectionSigData) rejectionSigData.value = signatureData;
+        
+        // Update signature method
+        const approvalSigMethod = document.getElementById('approvalSignatureMethod');
+        const rejectionSigMethod = document.getElementById('rejectionSignatureMethod');
+        
+        if (approvalSigMethod) approvalSigMethod.value = currentSignatureMethod;
+        if (rejectionSigMethod) rejectionSigMethod.value = currentSignatureMethod;
+    }
+
+    function updateApproveButton() {
+        const approveBtn = document.getElementById('approveBtn');
+        if (!approveBtn) return;
+        
+        let hasSignature = false;
+        
+        if (currentSignatureMethod === 'drawn') {
+            hasSignature = signaturePad && !signaturePad.isEmpty();
+        } else {
+            hasSignature = selectedSavedSignature !== null;
+        }
+        
+        if (hasSignature) {
+            approveBtn.disabled = false;
+            approveBtn.style.opacity = '1';
+        } else {
+            approveBtn.disabled = true;
+            approveBtn.style.opacity = '0.6';
+        }
+    }
+
+    function showStatusMessage(message, type) {
+        const statusContainer = document.getElementById('statusMessages');
+        if (!statusContainer) return;
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `status-message status-${type}`;
+        messageDiv.textContent = message;
+        
+        statusContainer.innerHTML = '';
+        statusContainer.appendChild(messageDiv);
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            messageDiv.remove();
+        }, 5000);
+    }
+
+    // FIXED: Show approval form and hide buttons
+    function showApprovalForm() {
+        console.log('showApprovalForm called'); // Debug log
+        
+        // Hide action buttons and show shared signature area + approval form
+        const initialActions = document.getElementById('initialActions');
+        const sharedSignatureArea = document.getElementById('sharedSignatureArea');
+        const approvalForm = document.getElementById('approvalForm');
+        
+        if (initialActions) {
+            initialActions.style.display = 'none';
+            console.log('Hidden initial actions');
+        }
+        
+        if (sharedSignatureArea) {
+            sharedSignatureArea.style.display = 'block';
+            console.log('Showed shared signature area');
+        }
+        
+        if (approvalForm) {
+            approvalForm.style.display = 'block';
+            console.log('Showed approval form');
+        }
+        
+        // Delay signature pad initialization to ensure canvas is visible and sized properly
+        setTimeout(() => {
+            initializeSignaturePad();
+            resizeCanvas();
+        }, 100);
+        
+        // Update signature data if drawn signature exists
+        if (currentSignatureMethod === 'drawn' && signaturePad && !signaturePad.isEmpty()) {
+            updateSignatureData(signaturePad.toDataURL());
+        }
+        
+        // Add submit and cancel buttons to approval form
+        if (!approvalForm.querySelector('.form-actions')) {
+            const formActions = document.createElement('div');
+            formActions.className = 'form-actions signature-actions';
+            formActions.innerHTML = `
+                <button type="submit" class="action-btn approve-btn">
+                    ✅ Confirm Approval
+                </button>
+                <button type="button" class="action-btn" onclick="cancelAction()" style="background: #6c757d; color: white;">
+                    Cancel
+                </button>
+            `;
+            approvalForm.appendChild(formActions);
+        }
+        
+        currentMode = 'approval';
+    }
+
+    // FIXED: Show rejection form and hide buttons
+    function showRejectionForm() {
+        console.log('showRejectionForm called'); // Debug log
+        
+        // Hide action buttons and show shared signature area + rejection form
+        const initialActions = document.getElementById('initialActions');
+        const sharedSignatureArea = document.getElementById('sharedSignatureArea');
+        const rejectionForm = document.getElementById('rejectionForm');
+        
+        if (initialActions) {
+            initialActions.style.display = 'none';
+            console.log('Hidden initial actions');
+        }
+        
+        if (sharedSignatureArea) {
+            sharedSignatureArea.style.display = 'block';
+            console.log('Showed shared signature area');
+        }
+        
+        if (rejectionForm) {
+            rejectionForm.style.display = 'block';
+            console.log('Showed rejection form');
+        }
+        
+        // Delay signature pad initialization to ensure canvas is visible and sized properly
+        setTimeout(() => {
+            initializeSignaturePad();
+            resizeCanvas();
+        }, 100);
+        
+        // Update signature data if drawn signature exists
+        if (currentSignatureMethod === 'drawn' && signaturePad && !signaturePad.isEmpty()) {
+            updateSignatureData(signaturePad.toDataURL());
+        }
+        
+        // Add submit and cancel buttons to rejection form
+        if (!rejectionForm.querySelector('.form-actions')) {
+            const formActions = document.createElement('div');
+            formActions.className = 'form-actions signature-actions';
+            formActions.innerHTML = `
+                <button type="submit" class="action-btn reject-btn">
+                    ❌ Confirm Rejection
+                </button>
+                <button type="button" class="action-btn" onclick="cancelAction()" style="background: #6c757d; color: white;">
+                    Cancel
+                </button>
+            `;
+            rejectionForm.appendChild(formActions);
+        }
+        
+        currentMode = 'rejection';
+    }
+
+    // Cancel action and return to selection mode
+    function cancelAction() {
+        console.log('cancelAction called'); // Debug log
+        
+        // Hide forms and shared signature area
+        const approvalForm = document.getElementById('approvalForm');
+        const rejectionForm = document.getElementById('rejectionForm');
+        const sharedSignatureArea = document.getElementById('sharedSignatureArea');
+        const initialActions = document.getElementById('initialActions');
+        
+        if (approvalForm) {
+            approvalForm.style.display = 'none';
+        }
+        
+        if (rejectionForm) {
+            rejectionForm.style.display = 'none';
+        }
+        
+        if (sharedSignatureArea) {
+            sharedSignatureArea.style.display = 'none';
+        }
+        
+        // Show action buttons
+        if (initialActions) {
+            initialActions.style.display = 'flex';
+        }
+        
+        // Clear any status messages
+        const statusContainer = document.getElementById('statusMessages');
+        if (statusContainer) {
+            statusContainer.innerHTML = '';
+        }
+        
+        currentMode = 'selection';
+    }
+
+    // Form submission handling
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle approval form submission
+        const approvalForm = document.getElementById('approvalForm');
+        if (approvalForm) {
+            approvalForm.addEventListener('submit', function(e) {
+                // Validate signature
+                if (!validateSignature()) {
+                    e.preventDefault();
+                    showStatusMessage('Please provide a digital signature before approving the request.', 'error');
+                    return false;
+                }
+                
+                // Update signature data
+                updateFormSignatureData();
+                
+                // Add loading state
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.innerHTML = '<span class="loading"></span> Processing Approval...';
+                    submitBtn.disabled = true;
+                }
+            });
+        }
+
+        // Handle rejection form submission
+        const rejectionForm = document.getElementById('rejectionForm');
+        if (rejectionForm) {
+            rejectionForm.addEventListener('submit', function(e) {
+                // Validate signature
+                if (!validateSignature()) {
+                    e.preventDefault();
+                    showStatusMessage('Please provide a digital signature before rejecting the request.', 'error');
+                    return false;
+                }
+                
+                // Validate rejection reason
+                const comment = this.querySelector('textarea[name="comment"]').value.trim();
+                if (!comment) {
+                    e.preventDefault();
+                    showStatusMessage('Please provide a reason for rejecting this request.', 'error');
+                    return false;
+                }
+                
+                if (!confirm('Are you sure you want to reject this request? This action cannot be undone.')) {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Update signature data
+                updateFormSignatureData();
+                
+                // Add loading state
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.innerHTML = '<span class="loading"></span> Processing Rejection...';
+                    submitBtn.disabled = true;
+                }
+            });
+        }
+    });
+
+    // Validate signature function
+    function validateSignature() {
+        if (currentSignatureMethod === 'drawn') {
+            return signaturePad && !signaturePad.isEmpty();
+        } else {
+            return selectedSavedSignature !== null;
+        }
+    }
+
+    // Update form signature data before submission
+    function updateFormSignatureData() {
+        let signatureData = '';
+        
+        if (currentSignatureMethod === 'drawn' && signaturePad && !signaturePad.isEmpty()) {
+            signatureData = signaturePad.toDataURL();
+        } else if (selectedSavedSignature) {
+            signatureData = selectedSavedSignature.data;
+        }
+        
+        updateSignatureData(signatureData);
+    }
+
+    // Auto-resize textareas
+    document.querySelectorAll('textarea').forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+
+    // Quick template functions
+    function insertTemplate(textareaId, template) {
+        const textarea = document.getElementById(textareaId);
+        if (textarea) {
+            textarea.value = template;
+            textarea.focus();
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
+    }
+
+    // Real-time progress updates (if using WebSocket)
+    function updateSigningProgress(data) {
+        // Update progress percentage
+        const progressBar = document.querySelector('.timeline-progress');
+        if (progressBar) {
+            progressBar.style.width = data.percentage + '%';
+        }
+        
+        // Update progress text
+        const progressText = document.getElementById('progressText');
+        if (progressText) {
+            progressText.textContent = data.message;
+        }
+        
+        // Update signatory statuses
+        if (data.signatories) {
+            data.signatories.forEach(signatory => {
+                const signatoryItem = document.querySelector(`[data-signatory-id="${signatory.id}"]`);
+                if (signatoryItem) {
+                    const statusIndicator = signatoryItem.querySelector('.status-indicator');
+                    const statusText = signatoryItem.querySelector('.status-text');
+                    
+                    if (statusIndicator) statusIndicator.className = `status-indicator ${signatory.status}`;
+                    if (statusText) statusText.textContent = signatory.statusText;
+                }
+            });
+        }
+    }
+</script>
+{% endblock %}
