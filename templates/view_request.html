@@ -924,13 +924,16 @@
             <div class="progress-summary">
                 <span id="progressText">
                     {% if request[3].lower() == 'completed' %}
-                        ✅ All signatures completed
+                        ✅ All {{ total_signers|default(1) }} signatures completed
                     {% elif request[3].lower() == 'rejected' %}
                         ❌ Request rejected
-                    {% elif request[3].lower() == 'in-progress' or request[3].lower() == 'pending' %}
+                    {% elif request[3].lower() == 'pending' %}
                         ⏳ {{ signed_count|default(0) }} of {{ total_signers|default(1) }} signed
+                        {% if signed_count and total_signers and signed_count >= (total_signers - 1) %}
+                            - Awaiting final admin approval
+                        {% endif %}
                     {% else %}
-                        📝 Awaiting signatures
+                        📝 Awaiting signatures ({{ total_signers|default(1) }} required)
                     {% endif %}
                 </span>
             </div>
@@ -954,32 +957,32 @@
                 </div>
                 
                 <div class="timeline-step">
-                    <div class="step-circle {{ 'completed' if request[3].lower() in ['approved', 'completed'] else ('current' if request[3].lower() in ['pending', 'in-progress'] else 'pending') }}">
-                        {% if request[3].lower() in ['approved', 'completed'] %}✓{% elif request[3].lower() in ['pending', 'in-progress'] %}🖊️{% else %}2{% endif %}
+                    <div class="step-circle {{ 'completed' if request[3].lower() in ['approved', 'completed'] else ('current' if request[3].lower() in ['pending'] else 'pending') }}">
+                        {% if request[3].lower() in ['approved', 'completed'] %}✓{% elif request[3].lower() == 'pending' %}🖊️{% else %}2{% endif %}
                     </div>
                     <div class="step-info">
-                        <div class="step-title">Under Review</div>
-                        <div class="step-subtitle">Awaiting signatures</div>
+                        <div class="step-title">Department Review</div>
+                        <div class="step-subtitle">{{ signed_count|default(0) }} of {{ (total_signers|default(1)) - 1 }} departments signed</div>
                         <div class="step-timestamp {{ 'pending' if request[3].lower() not in ['approved', 'completed'] else '' }}">
-                            {% if request[3].lower() in ['approved', 'completed'] %}
-                                {{ approval_date.strftime('%b %d, %Y') if approval_date else 'Recently' }}
-                            {% else %}
+                            {% if signed_count > 0 %}
                                 In progress
+                            {% else %}
+                                Awaiting signatures
                             {% endif %}
                         </div>
                     </div>
                 </div>
                 
                 <div class="timeline-step">
-                    <div class="step-circle {{ 'completed' if request[3].lower() == 'completed' else ('rejected' if request[3].lower() == 'rejected' else 'pending') }}">
-                        {% if request[3].lower() == 'completed' %}✓{% elif request[3].lower() == 'rejected' %}✗{% else %}3{% endif %}
+                    <div class="step-circle {{ 'completed' if request[3].lower() == 'completed' else ('rejected' if request[3].lower() == 'rejected' else ('current' if (signed_count|default(0)) >= ((total_signers|default(1)) - 1) and request[3].lower() != 'completed' else 'pending')) }}">
+                        {% if request[3].lower() == 'completed' %}✓{% elif request[3].lower() == 'rejected' %}✗{% elif (signed_count|default(0)) >= ((total_signers|default(1)) - 1) and request[3].lower() != 'completed' %}🔐{% else %}3{% endif %}
                     </div>
                     <div class="step-info">
                         <div class="step-title">
-                            {% if request[3].lower() == 'completed' %}Completed{% elif request[3].lower() == 'rejected' %}Rejected{% else %}Final Step{% endif %}
+                            {% if request[3].lower() == 'completed' %}Completed{% elif request[3].lower() == 'rejected' %}Rejected{% else %}Admin Final Approval{% endif %}
                         </div>
                         <div class="step-subtitle">
-                            {% if request[3].lower() == 'completed' %}All signed{% elif request[3].lower() == 'rejected' %}Not approved{% else %}Pending completion{% endif %}
+                            {% if request[3].lower() == 'completed' %}All signed{% elif request[3].lower() == 'rejected' %}Not approved{% elif (signed_count|default(0)) >= ((total_signers|default(1)) - 1) %}Awaiting Administrator{% else %}Pending department approvals{% endif %}
                         </div>
                         <div class="step-timestamp {{ 'pending' if request[3].lower() not in ['completed', 'rejected'] else '' }}">
                             {% if request[3].lower() in ['completed', 'rejected'] %}
@@ -1002,40 +1005,40 @@
                 </div>
             </div>
             
-            <!-- Sample signatories - replace with actual data from backend -->
-            {% set sample_signatories = [
-                {'name': 'John Smith', 'role': 'Department Head', 'status': 'signed', 'signed_date': '2024-01-15'},
-                {'name': 'Jane Doe', 'role': 'Finance Manager', 'status': 'current', 'signed_date': None},
-                {'name': 'Mike Johnson', 'role': 'HR Director', 'status': 'pending', 'signed_date': None}
-            ] %}
-            
-            {% for signatory in signatories|default(sample_signatories) %}
-            <div class="signatory-item">
+            <!-- REAL APPROVAL DATA from backend -->
+            {% for signatory in signatories %}
+            <div class="signatory-item" data-signatory-id="{{ signatory.department }}">
                 <div class="signatory-info">
                     <div class="signatory-avatar">
-                        {{ signatory.name[0] if signatory.name else '?' }}
+                        {{ signatory.name[0] if signatory.name else signatory.department[0] }}
                     </div>
                     <div class="signatory-details">
-                        <h4>{{ signatory.name|default('Unknown') }}</h4>
-                        <small>{{ signatory.role|default('Role not specified') }}</small>
+                        <h4>{{ signatory.role }}</h4>
+                        <small>{{ signatory.department }} Department</small>
                     </div>
                 </div>
                 <div class="signatory-status">
-                    <div class="status-indicator {{ signatory.status|default('pending') }}"></div>
-                    <span class="status-text {{ signatory.status|default('pending') }}">
+                    <div class="status-indicator {{ signatory.status }}"></div>
+                    <span class="status-text {{ signatory.status }}">
                         {% if signatory.status == 'signed' %}
-                            Signed {{ signatory.signed_date if signatory.signed_date else 'recently' }}
+                            ✅ Signed {{ signatory.signed_date if signatory.signed_date else 'recently' }}
                         {% elif signatory.status == 'current' %}
-                            Your turn to sign
+                            🖊️ {{ signatory.name }}
                         {% elif signatory.status == 'rejected' %}
-                            Rejected
+                            ❌ Rejected
                         {% else %}
-                            Waiting
+                            ⏳ {{ signatory.name }}
                         {% endif %}
                     </span>
                 </div>
             </div>
             {% endfor %}
+            
+            {% if not signatories %}
+                <div style="text-align: center; padding: 20px; color: #666;">
+                    <em>No approval workflow configured for this request.</em>
+                </div>
+            {% endif %}
         </div>
     </div>
 
@@ -1100,15 +1103,24 @@
     {% endif %}
 
     <!-- INTEGRATED E-SIGNATURE SECTION -->
-    <!-- Show for current signer or when it's their turn -->
-    {% if session.user_role in ['approver', 'admin'] or is_current_signer %}
+    <!-- Show for approvers, admins, or current signers -->
+    {% if (session.user_role in ['approver', 'admin']) and can_approve %}
     <div class="signature-section">
         <div class="signature-header">
             <h2 class="signature-title">Digital Signature Required</h2>
+            <div class="approval-status">
+                {% if session.user_role == 'admin' %}
+                    🔐 Administrator Final Approval
+                {% elif approval_message %}
+                    {{ approval_message }}
+                {% else %}
+                    Ready for your signature
+                {% endif %}
+            </div>
         </div>
 
-        <form id="signatureForm" method="POST" action="{{ url_for('approve_request', request_id=request[0]) }}">
-            <!-- Signature Input Area -->
+        <!-- SHARED SIGNATURE INPUT AREA -->
+        <div id="sharedSignatureArea" style="display: none;">
             <div class="signature-input-area">
                 <div class="signature-tabs">
                     <div class="signature-tab active" onclick="switchTab('draw')">✏️ Draw Signature</div>
@@ -1152,47 +1164,72 @@
                         </div>
                     </div>
                     <div style="text-align: center;">
-                        <a href="{{ url_for('manage_signatures') if 'manage_signatures' in view_functions else '#' }}" target="_blank" style="color: #28a745; text-decoration: none; font-weight: bold;">
+                        <a href="#" style="color: #28a745; text-decoration: none; font-weight: bold;">
                             ⚙️ Manage My Signatures
                         </a>
                     </div>
                 </div>
-
-                <input type="hidden" name="signature" id="signatureData">
-                <input type="hidden" name="signature_method" id="signatureMethod" value="drawn">
             </div>
+        </div>
 
+        <!-- APPROVAL FORM -->
+        <form id="approvalForm" method="POST" action="{{ url_for('approve_request', request_id=request[0]) }}" style="display: none;">
+            <input type="hidden" name="signature" id="approvalSignatureData">
+            <input type="hidden" name="signature_method" id="approvalSignatureMethod" value="drawn">
+            
             <!-- Approval Comments -->
             <div class="approval-comments">
                 <label class="comments-label">Comments (Optional)</label>
-                <textarea name="comment" class="comments-textarea" 
+                <textarea name="comment" id="approvalComment" class="comments-textarea" 
                           placeholder="Add any comments about this approval..."></textarea>
                 
                 <!-- Quick Templates -->
                 <div style="margin-top: 15px;">
                     <small style="color: #666; font-weight: 600;">Quick Templates:</small><br>
-                    <button type="button" onclick="insertTemplate('Reviewed and approved as per company policy.')" 
+                    <button type="button" onclick="insertTemplate('approvalComment', 'Reviewed and approved as per company policy.')" 
                             style="margin: 5px; padding: 6px 12px; border: 1px solid #28a745; border-radius: 15px; background: #e8f5e8; color: #155724; font-size: 12px; cursor: pointer;">Standard Approval</button>
-                    <button type="button" onclick="insertTemplate('Approved with conditions - please ensure all requirements are met.')" 
+                    <button type="button" onclick="insertTemplate('approvalComment', 'Approved with conditions - please ensure all requirements are met.')" 
                             style="margin: 5px; padding: 6px 12px; border: 1px solid #f0c240; border-radius: 15px; background: #fff3cd; color: #856404; font-size: 12px; cursor: pointer;">Conditional</button>
-                    <button type="button" onclick="insertTemplate('Request denied due to insufficient documentation.')" 
-                            style="margin: 5px; padding: 6px 12px; border: 1px solid #dc3545; border-radius: 15px; background: #f8d7da; color: #721c24; font-size: 12px; cursor: pointer;">Insufficient Info</button>
                 </div>
             </div>
+        </form>
 
-            <!-- Status Messages -->
-            <div id="statusMessages"></div>
-
-            <!-- Action Buttons -->
-            <div class="signature-actions">
-                <button type="submit" name="action" value="approve" class="action-btn approve-btn" id="approveBtn" disabled>
-                    ✅ Approve & Sign
-                </button>
-                <button type="submit" name="action" value="reject" class="action-btn reject-btn" id="rejectBtn">
-                    ❌ Reject Request
-                </button>
+        <!-- REJECTION FORM -->
+        <form id="rejectionForm" method="POST" action="{{ url_for('reject_request', request_id=request[0]) }}" style="display: none;">
+            <input type="hidden" name="signature" id="rejectionSignatureData">
+            <input type="hidden" name="signature_method" id="rejectionSignatureMethod" value="drawn">
+            
+            <!-- Rejection Comments -->
+            <div class="approval-comments">
+                <label class="comments-label">Reason for Rejection <span style="color: red;">*</span></label>
+                <textarea name="comment" id="rejectionComment" class="comments-textarea" 
+                          placeholder="Please provide a clear reason for rejecting this request..." required></textarea>
+                
+                <!-- Quick Templates for rejection -->
+                <div style="margin-top: 15px;">
+                    <small style="color: #666; font-weight: 600;">Quick Templates:</small><br>
+                    <button type="button" onclick="insertTemplate('rejectionComment', 'Request denied due to insufficient documentation.')" 
+                            style="margin: 5px; padding: 6px 12px; border: 1px solid #dc3545; border-radius: 15px; background: #f8d7da; color: #721c24; font-size: 12px; cursor: pointer;">Insufficient Info</button>
+                    <button type="button" onclick="insertTemplate('rejectionComment', 'Request does not meet company policy requirements.')" 
+                            style="margin: 5px; padding: 6px 12px; border: 1px solid #dc3545; border-radius: 15px; background: #f8d7da; color: #721c24; font-size: 12px; cursor: pointer;">Policy Issue</button>
+                    <button type="button" onclick="insertTemplate('rejectionComment', 'Budget constraints prevent approval at this time.')" 
+                            style="margin: 5px; padding: 6px 12px; border: 1px solid #dc3545; border-radius: 15px; background: #f8d7da; color: #721c24; font-size: 12px; cursor: pointer;">Budget</button>
+                </div>
             </div>
         </form>
+
+        <!-- Status Messages -->
+        <div id="statusMessages"></div>
+
+        <!-- Action Buttons -->
+        <div class="signature-actions" id="initialActions">
+            <button type="button" class="action-btn approve-btn" id="approveBtn" onclick="showApprovalForm()">
+                ✅ Approve & Sign
+            </button>
+            <button type="button" class="action-btn reject-btn" id="rejectBtn" onclick="showRejectionForm()">
+                ❌ Reject Request
+            </button>
+        </div>
     </div>
     {% endif %}
 
@@ -1249,11 +1286,31 @@
     let historyStep = -1;
     let currentSignatureMethod = 'drawn';
     let selectedSavedSignature = null;
+    let currentMode = 'selection'; // 'selection', 'approval', 'rejection'
 
     // Initialize signature pad
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM Content Loaded'); // Debug log
         initializeSignaturePad();
         updateProgressAnimation();
+        
+        // Add click event listeners as backup
+        const approveBtn = document.getElementById('approveBtn');
+        const rejectBtn = document.getElementById('rejectBtn');
+        
+        if (approveBtn) {
+            approveBtn.addEventListener('click', function() {
+                console.log('Approve button clicked via event listener');
+                showApprovalForm();
+            });
+        }
+        
+        if (rejectBtn) {
+            rejectBtn.addEventListener('click', function() {
+                console.log('Reject button clicked via event listener');
+                showRejectionForm();
+            });
+        }
     });
 
     function initializeSignaturePad() {
@@ -1268,7 +1325,10 @@
             
             signaturePad.addEventListener('endStroke', function() {
                 saveSignatureState();
-                updateApproveButton();
+                // Auto-update signature data when drawing
+                if (currentMode === 'approval' || currentMode === 'rejection') {
+                    updateSignatureData(signaturePad.toDataURL());
+                }
             });
             
             resizeCanvas();
@@ -1309,16 +1369,19 @@
             document.getElementById('drawSignatureTab').style.display = 'block';
             document.getElementById('savedSignatureTab').style.display = 'none';
             currentSignatureMethod = 'drawn';
-            document.getElementById('signatureMethod').value = 'drawn';
         } else {
             document.querySelector('.signature-tab:last-child').classList.add('active');
             document.getElementById('drawSignatureTab').style.display = 'none';
             document.getElementById('savedSignatureTab').style.display = 'block';
             currentSignatureMethod = 'saved';
-            document.getElementById('signatureMethod').value = 'saved';
         }
         
-        updateApproveButton();
+        // Update signature method in both forms
+        const approvalSigMethod = document.getElementById('approvalSignatureMethod');
+        const rejectionSigMethod = document.getElementById('rejectionSignatureMethod');
+        
+        if (approvalSigMethod) approvalSigMethod.value = currentSignatureMethod;
+        if (rejectionSigMethod) rejectionSigMethod.value = currentSignatureMethod;
     }
 
     function clearSignature() {
@@ -1326,7 +1389,8 @@
             signaturePad.clear();
             signatureHistory = [];
             historyStep = -1;
-            updateApproveButton();
+            // Clear signature data from forms
+            updateSignatureData('');
         }
     }
 
@@ -1346,9 +1410,12 @@
             img.onload = function() {
                 signaturePad.clear();
                 signaturePad._ctx.drawImage(img, 0, 0);
+                // Update signature data after undo
+                if (currentMode === 'approval' || currentMode === 'rejection') {
+                    updateSignatureData(imageData);
+                }
             };
             img.src = imageData;
-            updateApproveButton();
         }
     }
 
@@ -1360,9 +1427,12 @@
             img.onload = function() {
                 signaturePad.clear();
                 signaturePad._ctx.drawImage(img, 0, 0);
+                // Update signature data after redo
+                if (currentMode === 'approval' || currentMode === 'rejection') {
+                    updateSignatureData(imageData);
+                }
             };
             img.src = imageData;
-            updateApproveButton();
         }
     }
 
@@ -1377,9 +1447,25 @@
         
         // Store signature data
         selectedSavedSignature = { id: signatureId, data: signatureData };
-        document.getElementById('signatureData').value = signatureData;
         
-        updateApproveButton();
+        // Update both form signature inputs
+        updateSignatureData(signatureData);
+    }
+
+    function updateSignatureData(signatureData) {
+        // Update signature data in both forms
+        const approvalSigData = document.getElementById('approvalSignatureData');
+        const rejectionSigData = document.getElementById('rejectionSignatureData');
+        
+        if (approvalSigData) approvalSigData.value = signatureData;
+        if (rejectionSigData) rejectionSigData.value = signatureData;
+        
+        // Update signature method
+        const approvalSigMethod = document.getElementById('approvalSignatureMethod');
+        const rejectionSigMethod = document.getElementById('rejectionSignatureMethod');
+        
+        if (approvalSigMethod) approvalSigMethod.value = currentSignatureMethod;
+        if (rejectionSigMethod) rejectionSigMethod.value = currentSignatureMethod;
     }
 
     function updateApproveButton() {
@@ -1420,39 +1506,186 @@
         }, 5000);
     }
 
+    // FIXED: Show approval form and hide buttons
+    function showApprovalForm() {
+        console.log('showApprovalForm called'); // Debug log
+        
+        // Hide action buttons and show shared signature area + approval form
+        const initialActions = document.getElementById('initialActions');
+        const sharedSignatureArea = document.getElementById('sharedSignatureArea');
+        const approvalForm = document.getElementById('approvalForm');
+        
+        if (initialActions) {
+            initialActions.style.display = 'none';
+            console.log('Hidden initial actions');
+        }
+        
+        if (sharedSignatureArea) {
+            sharedSignatureArea.style.display = 'block';
+            console.log('Showed shared signature area');
+        }
+        
+        if (approvalForm) {
+            approvalForm.style.display = 'block';
+            console.log('Showed approval form');
+        }
+        
+        // Delay signature pad initialization to ensure canvas is visible and sized properly
+        setTimeout(() => {
+            initializeSignaturePad();
+            resizeCanvas();
+        }, 100);
+        
+        // Update signature data if drawn signature exists
+        if (currentSignatureMethod === 'drawn' && signaturePad && !signaturePad.isEmpty()) {
+            updateSignatureData(signaturePad.toDataURL());
+        }
+        
+        // Add submit and cancel buttons to approval form
+        if (!approvalForm.querySelector('.form-actions')) {
+            const formActions = document.createElement('div');
+            formActions.className = 'form-actions signature-actions';
+            formActions.innerHTML = `
+                <button type="submit" class="action-btn approve-btn">
+                    ✅ Confirm Approval
+                </button>
+                <button type="button" class="action-btn" onclick="cancelAction()" style="background: #6c757d; color: white;">
+                    Cancel
+                </button>
+            `;
+            approvalForm.appendChild(formActions);
+        }
+        
+        currentMode = 'approval';
+    }
+
+    // FIXED: Show rejection form and hide buttons
+    function showRejectionForm() {
+        console.log('showRejectionForm called'); // Debug log
+        
+        // Hide action buttons and show shared signature area + rejection form
+        const initialActions = document.getElementById('initialActions');
+        const sharedSignatureArea = document.getElementById('sharedSignatureArea');
+        const rejectionForm = document.getElementById('rejectionForm');
+        
+        if (initialActions) {
+            initialActions.style.display = 'none';
+            console.log('Hidden initial actions');
+        }
+        
+        if (sharedSignatureArea) {
+            sharedSignatureArea.style.display = 'block';
+            console.log('Showed shared signature area');
+        }
+        
+        if (rejectionForm) {
+            rejectionForm.style.display = 'block';
+            console.log('Showed rejection form');
+        }
+        
+        // Delay signature pad initialization to ensure canvas is visible and sized properly
+        setTimeout(() => {
+            initializeSignaturePad();
+            resizeCanvas();
+        }, 100);
+        
+        // Update signature data if drawn signature exists
+        if (currentSignatureMethod === 'drawn' && signaturePad && !signaturePad.isEmpty()) {
+            updateSignatureData(signaturePad.toDataURL());
+        }
+        
+        // Add submit and cancel buttons to rejection form
+        if (!rejectionForm.querySelector('.form-actions')) {
+            const formActions = document.createElement('div');
+            formActions.className = 'form-actions signature-actions';
+            formActions.innerHTML = `
+                <button type="submit" class="action-btn reject-btn">
+                    ❌ Confirm Rejection
+                </button>
+                <button type="button" class="action-btn" onclick="cancelAction()" style="background: #6c757d; color: white;">
+                    Cancel
+                </button>
+            `;
+            rejectionForm.appendChild(formActions);
+        }
+        
+        currentMode = 'rejection';
+    }
+
+    // Cancel action and return to selection mode
+    function cancelAction() {
+        console.log('cancelAction called'); // Debug log
+        
+        // Hide forms and shared signature area
+        const approvalForm = document.getElementById('approvalForm');
+        const rejectionForm = document.getElementById('rejectionForm');
+        const sharedSignatureArea = document.getElementById('sharedSignatureArea');
+        const initialActions = document.getElementById('initialActions');
+        
+        if (approvalForm) {
+            approvalForm.style.display = 'none';
+        }
+        
+        if (rejectionForm) {
+            rejectionForm.style.display = 'none';
+        }
+        
+        if (sharedSignatureArea) {
+            sharedSignatureArea.style.display = 'none';
+        }
+        
+        // Show action buttons
+        if (initialActions) {
+            initialActions.style.display = 'flex';
+        }
+        
+        // Clear any status messages
+        const statusContainer = document.getElementById('statusMessages');
+        if (statusContainer) {
+            statusContainer.innerHTML = '';
+        }
+        
+        currentMode = 'selection';
+    }
+
     // Form submission handling
-    const signatureForm = document.getElementById('signatureForm');
-    if (signatureForm) {
-        signatureForm.addEventListener('submit', function(e) {
-            const action = e.submitter.value;
-            
-            if (action === 'approve') {
-                // Validate signature for approval
-                let hasSignature = false;
-                
-                if (currentSignatureMethod === 'drawn') {
-                    if (signaturePad && !signaturePad.isEmpty()) {
-                        document.getElementById('signatureData').value = signaturePad.toDataURL();
-                        hasSignature = true;
-                    }
-                } else {
-                    hasSignature = selectedSavedSignature !== null;
-                }
-                
-                if (!hasSignature) {
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle approval form submission
+        const approvalForm = document.getElementById('approvalForm');
+        if (approvalForm) {
+            approvalForm.addEventListener('submit', function(e) {
+                // Validate signature
+                if (!validateSignature()) {
                     e.preventDefault();
                     showStatusMessage('Please provide a digital signature before approving the request.', 'error');
                     return false;
                 }
                 
-                // Add loading state
-                const approveBtn = document.getElementById('approveBtn');
-                approveBtn.innerHTML = '<span class="loading"></span> Processing Approval...';
-                approveBtn.disabled = true;
+                // Update signature data
+                updateFormSignatureData();
                 
-            } else if (action === 'reject') {
+                // Add loading state
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.innerHTML = '<span class="loading"></span> Processing Approval...';
+                    submitBtn.disabled = true;
+                }
+            });
+        }
+
+        // Handle rejection form submission
+        const rejectionForm = document.getElementById('rejectionForm');
+        if (rejectionForm) {
+            rejectionForm.addEventListener('submit', function(e) {
+                // Validate signature
+                if (!validateSignature()) {
+                    e.preventDefault();
+                    showStatusMessage('Please provide a digital signature before rejecting the request.', 'error');
+                    return false;
+                }
+                
                 // Validate rejection reason
-                const comment = document.querySelector('textarea[name="comment"]').value.trim();
+                const comment = this.querySelector('textarea[name="comment"]').value.trim();
                 if (!comment) {
                     e.preventDefault();
                     showStatusMessage('Please provide a reason for rejecting this request.', 'error');
@@ -1464,12 +1697,39 @@
                     return false;
                 }
                 
+                // Update signature data
+                updateFormSignatureData();
+                
                 // Add loading state
-                const rejectBtn = document.getElementById('rejectBtn');
-                rejectBtn.innerHTML = '<span class="loading"></span> Processing Rejection...';
-                rejectBtn.disabled = true;
-            }
-        });
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.innerHTML = '<span class="loading"></span> Processing Rejection...';
+                    submitBtn.disabled = true;
+                }
+            });
+        }
+    });
+
+    // Validate signature function
+    function validateSignature() {
+        if (currentSignatureMethod === 'drawn') {
+            return signaturePad && !signaturePad.isEmpty();
+        } else {
+            return selectedSavedSignature !== null;
+        }
+    }
+
+    // Update form signature data before submission
+    function updateFormSignatureData() {
+        let signatureData = '';
+        
+        if (currentSignatureMethod === 'drawn' && signaturePad && !signaturePad.isEmpty()) {
+            signatureData = signaturePad.toDataURL();
+        } else if (selectedSavedSignature) {
+            signatureData = selectedSavedSignature.data;
+        }
+        
+        updateSignatureData(signatureData);
     }
 
     // Auto-resize textareas
@@ -1481,8 +1741,8 @@
     });
 
     // Quick template functions
-    function insertTemplate(template) {
-        const textarea = document.querySelector('textarea[name="comment"]');
+    function insertTemplate(textareaId, template) {
+        const textarea = document.getElementById(textareaId);
         if (textarea) {
             textarea.value = template;
             textarea.focus();

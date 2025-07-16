@@ -1,38 +1,133 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body with gradient background and watermark logo on the right */
 body {
-    font-family: Arial, sans-serif;
-    background: #f4f4f4;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to right, #afbaed, #764ba2);
+    height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    position: relative; /* allow absolute positioning inside */
+    overflow: hidden;   /* hide overflow of watermark */
 }
+
+/* Login container styling */
 .login-container {
-    background: #fff;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    width: 300px;
-}
-h2 {
+    position: relative; /* above watermark */
+    background-color: #ffffff;
+    padding: 40px 50px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 400px;
     text-align: center;
-    margin-bottom: 1.5rem;
+    z-index: 1;
 }
-input[type="text"], input[type="password"] {
+
+/* Ensure all child elements inside login container appear above watermark */
+.login-container > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Heading style */
+.login-container h2 {
+    margin-bottom: 25px;
+    color: #333;
+    font-size: 28px;
+}
+
+/* Input fields */
+.login-container input[type="text"],
+.login-container input[type="password"] {
     width: 100%;
-    padding: 0.7rem;
-    margin-bottom: 1rem;
+    padding: 14px 16px;
+    margin: 12px 0;
     border: 1px solid #ccc;
-    border-radius: 4px;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s;
 }
-button {
+
+/* Input focus effect */
+.login-container input:focus {
+    border-color: #5a67d8;
+    outline: none;
+    box-shadow: 0 0 5px rgba(90, 103, 216, 0.3);
+}
+
+/* Submit button */
+.login-container button {
     width: 100%;
-    padding: 0.7rem;
-    background: #007bff;
-    color: white;
+    padding: 14px;
+    background-color: #5a67d8;
     border: none;
-    border-radius: 4px;
+    color: white;
+    font-size: 16px;
+    border-radius: 8px;
     cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    margin-top: 10px;
 }
-button:hover {
-    background: #0056b3;
+
+/* Button hover effect */
+.login-container button:hover {
+    background-color: #434190;
+    transform: scale(1.02);
+}
+
+/* Optional SBLC logo image inside the container */
+.logo {
+    width: 100px !important;
+    height: auto !important;
+    margin-bottom: 20px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    object-fit: contain;
+}
+
+/* Common styles for side images */
+.side-image {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.12; /* soft background effect */
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Left side image */
+.side-image.left {
+    position: absolute;
+    left: 40px;
+    top: 75%;
+    width: 450px;
+    height: auto;
+    max-height: 300px;
+    object-fit: contain;
+    opacity: 0.12;
+    pointer-events: none;
+    transform: translateY(-50%);
+    z-index: 0;
+}
+
+/* Right side image */
+.side-image.right {
+    position: absolute;
+    right: 40px;
+    top: 76%; /* or whatever position you like */
+    width: 450px;
+    height: auto;               /* Maintain natural aspect ratio */
+    max-height: 300px;          /* Limit height if needed */
+    object-fit: contain;        /* Optional: handles aspect ratio in containers */
+    opacity: 0.12;
+    pointer-events: none;
+    transform: translateY(-50%);
+    z-index: 0;
 }

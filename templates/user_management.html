@@ -111,116 +111,115 @@
         </div>
         
         <!-- Active Users View -->
-        <div id="activeUsersView" class="user-view">
-            <!-- Department Filter Tabs -->
-            <div class="tabs">
-                <button class="tab active" data-filter="all">All Users</button>
-                <button class="tab" data-filter="IT">IT</button>
-                <button class="tab" data-filter="DEAN">DEAN</button>
-                <button class="tab" data-filter="ADMIN">ADMIN</button>
-                <button class="tab" data-filter="Accounting">Accounting</button>
-                <button class="tab" data-filter="HR">HR</button>
-                <button class="tab" data-filter="Others">Others</button>
-                <button class="tab" data-filter="no-dept">No Department</button>
-            </div>
-
-            <table class="request-table" id="activeUsersTable">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Username</th>
-                        <th>Full Name</th>
-                        <th>Role</th>
-                        <th>Department</th>
-                        <th>Email</th>
-                        <th>Created</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in users %}
-                    {% if not user.archived %}
-                    <tr data-department="{{ user.department or 'no-dept' }}" data-user-id="{{ user.id }}">
-                        <td>{{ user.id }}</td>
-                        <td>{{ user.username }}</td>
-                        <td>{{ user.name }}</td>
-                        <td>
-                            <span class="status {{ user.role }}">
-                                {{ user.role|title }}
-                            </span>
-                        </td>
-                        <td>{{ user.department or '-' }}</td>
-                        <td>{{ user.email or '-' }}</td>
-                        <td>{{ user.created_at.strftime('%b %d, %Y') if user.created_at else '-' }}</td>
-                        <td>
-                            <button class="view-btn" onclick="editUser({{ user.id }})">✏️ Edit</button>
-                            {% if user.id != session.user_id %}
-                                <button class="archive-btn" onclick="archiveUser({{ user.id }}, '{{ user.username }}')">📁 Archive</button>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endif %}
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Archived Users View -->
-        <div id="archivedUsersView" class="user-view" style="display: none;">
-            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
-                <h4 style="margin: 0 0 8px 0; color: #856404;">📁 Archived Users</h4>
-                <p style="margin: 0; color: #856404; font-size: 14px;">
-                    These users have been archived and cannot log in. Their data is preserved for record-keeping purposes.
-                    You can restore them to active status if needed.
-                </p>
-            </div>
-
-            <table class="request-table" id="archivedUsersTable">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Username</th>
-                        <th>Full Name</th>
-                        <th>Role</th>
-                        <th>Department</th>
-                        <th>Email</th>
-                        <th>Archived Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in users %}
-                    {% if user.archived %}
-                    <tr data-user-id="{{ user.id }}" class="archived-row">
-                        <td>{{ user.id }}</td>
-                        <td>{{ user.username }}</td>
-                        <td>{{ user.name }}</td>
-                        <td>
-                            <span class="status archived">
-                                {{ user.role|title }}
-                            </span>
-                        </td>
-                        <td>{{ user.department or '-' }}</td>
-                        <td>{{ user.email or '-' }}</td>
-                        <td>{{ user.archived_at.strftime('%b %d, %Y') if user.archived_at else '-' }}</td>
-                        <td>
-                            <button class="view-btn" onclick="viewArchivedUser({{ user.id }})">👁️ View</button>
-                            <button class="restore-btn" onclick="restoreUser({{ user.id }}, '{{ user.username }}')">🔄 Restore</button>
-                            <button class="permanent-delete-btn" onclick="permanentDeleteUser({{ user.id }}, '{{ user.username }}')">🗑️ Delete</button>
-                        </td>
-                    </tr>
-                    {% endif %}
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            {% if not users or users|selectattr('archived', 'equalto', true)|list|length == 0 %}
-            <div class="no-requests">
-                <p>No archived users found.</p>
-            </div>
-            {% endif %}
-        </div>
+<div id="activeUsersView" class="user-view">
+    <!-- Department Filter Tabs -->
+    <div class="tabs">
+        <button class="tab active" data-filter="all">All Users</button>
+        <button class="tab" data-filter="IT">IT</button>
+        <button class="tab" data-filter="DEAN">DEAN</button>
+        <button class="tab" data-filter="ADMIN">ADMIN</button>
+        <button class="tab" data-filter="Accounting">Accounting</button>
+        <button class="tab" data-filter="HR">HR</button>
+        <button class="tab" data-filter="Others">Others</button>
+        <button class="tab" data-filter="no-dept">No Department</button>
     </div>
+
+    <table class="request-table" id="activeUsersTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Full Name</th>
+                <th>Role</th>
+                <th>Department</th>
+                <th>Email</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            {% if not user.archived %}
+            <tr data-department="{{ user.department or 'no-dept' }}" data-user-id="{{ user.id }}">
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.name }}</td>
+                <td>
+                    <span class="status {{ user.role }}">
+                        {{ user.role|title }}
+                    </span>
+                </td>
+                <td>{{ user.department or '-' }}</td>
+                <td>{{ user.email or '-' }}</td>
+                <td>{{ user.created_at.strftime('%b %d, %Y') if user.created_at else '-' }}</td>
+                <td>
+                    <button class="view-btn" onclick="editUser({{ user.id }})">✏️ Edit</button>
+                    {% if user.id != session.user_id %}
+                        <button class="archive-btn" onclick="archiveUser({{ user.id }}, '{{ user.username }}')">📁 Archive</button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Archived Users View -->
+<div id="archivedUsersView" class="user-view" style="display: none;">
+    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
+        <h4 style="margin: 0 0 8px 0; color: #856404;">📁 Archived Users</h4>
+        <p style="margin: 0; color: #856404; font-size: 14px;">
+            These users have been archived and cannot log in. Their data is preserved for record-keeping purposes.
+            You can restore them to active status if needed.
+        </p>
+    </div>
+
+    <table class="request-table" id="archivedUsersTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Full Name</th>
+                <th>Role</th>
+                <th>Department</th>
+                <th>Email</th>
+                <th>Archived Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            {% if user.archived %}
+            <tr data-user-id="{{ user.id }}" class="archived-row">
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.name }}</td>
+                <td>
+                    <span class="status archived">
+                        {{ user.role|title }}
+                    </span>
+                </td>
+                <td>{{ user.department or '-' }}</td>
+                <td>{{ user.email or '-' }}</td>
+                <td>{{ user.archived_at.strftime('%b %d, %Y') if user.archived_at else '-' }}</td>
+                <td>
+                    <button class="view-btn" onclick="viewArchivedUser({{ user.id }})">👁️ View</button>
+                    <button class="restore-btn" onclick="restoreUser({{ user.id }}, '{{ user.username }}')">🔄 Restore</button>
+                    <button class="permanent-delete-btn" onclick="permanentDeleteUser({{ user.id }}, '{{ user.username }}')">🗑️ Delete</button>
+                </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if not users or users|selectattr('archived', 'equalto', true)|list|length == 0 %}
+    <div class="no-requests">
+        <p>No archived users found.</p>
+    </div>
+    {% endif %}
+</div>
 
 <!-- Edit User Modal -->
 <div id="editModal" class="modal" style="display: none;">

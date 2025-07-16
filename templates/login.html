@@ -2,14 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - SBLC</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 </head>
 <body>
+    <img src="{{ url_for('static', filename='images/newschoolSBLC.png.png') }}" class="side-image left" alt="Left Decoration">
+    <img src="{{ url_for('static', filename='images/school2.png.png') }}" class="side-image right" alt="Right Decoration">
+
     <div class="login-container">
+        <img src="{{ url_for('static', filename='images/logoSBLC.png.png') }}" alt="SBLC Logo" class="logo">
         <h2>Login</h2>
-        <form method="POST" action="/login">
-            <input type="text" name="username" placeholder="Username" required>
+        
+        <!-- Flash messages for feedback -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST" action="{{ url_for('login') }}">
+            <input type="text" name="username" placeholder="Username" required value="{{ request.form.username if request.form.username }}">
             <input type="password" name="password" placeholder="Password" required>
             <button type="submit">Log In</button>
         </form>
